@@ -1,7 +1,7 @@
 package com.antecsis.controller;
 
-import com.antecsis.dto.VentaRequestDTO;
-import com.antecsis.dto.VentaResponseDTO;
+import com.antecsis.dto.venta.VentaRequestDTO;
+import com.antecsis.dto.venta.VentaResponseDTO;
 import com.antecsis.service.VentaService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

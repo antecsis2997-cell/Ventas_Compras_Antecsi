@@ -1,9 +1,9 @@
 package com.antecsis.service;
 
-import com.antecsis.dto.CompraRequestDTO;
-import com.antecsis.dto.CompraResponseDTO;
-
 import java.util.List;
+
+import com.antecsis.dto.compra.CompraRequestDTO;
+import com.antecsis.dto.compra.CompraResponseDTO;
 
 public interface CompraService {
     CompraResponseDTO crear(CompraRequestDTO dto);

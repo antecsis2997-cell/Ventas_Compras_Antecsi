@@ -1,4 +1,4 @@
-package com.antecsis.dto;
+package com.antecsis.dto.compra;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

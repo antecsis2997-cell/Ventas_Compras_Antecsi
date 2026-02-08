@@ -1,4 +1,4 @@
-package com.antecsis.dto;
+package com.antecsis.dto.venta;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @AllArgsConstructor
-public class CompraResponseDTO {
+public class VentaResponseDTO {
     private Long id;
-    private String proveedor;
+    private Long clienteId;
     private LocalDateTime fecha;
     private Double total;
 }

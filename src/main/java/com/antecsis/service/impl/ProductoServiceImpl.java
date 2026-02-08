@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.antecsis.dto.ProductoRequestDTO;
-import com.antecsis.dto.ProductoResponseDTO;
+import com.antecsis.dto.producto.ProductoRequestDTO;
+import com.antecsis.dto.producto.ProductoResponseDTO;
 import com.antecsis.entity.Producto;
 import com.antecsis.repository.ProductoRepository;
 import com.antecsis.service.ProductoService;

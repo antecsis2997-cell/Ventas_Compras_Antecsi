@@ -1,7 +1,7 @@
 package com.antecsis.controller;
 
-import com.antecsis.dto.CompraRequestDTO;
-import com.antecsis.dto.CompraResponseDTO;
+import com.antecsis.dto.compra.CompraRequestDTO;
+import com.antecsis.dto.compra.CompraResponseDTO;
 import com.antecsis.service.CompraService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

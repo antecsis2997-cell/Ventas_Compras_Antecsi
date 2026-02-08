@@ -20,10 +20,12 @@ public class Compra {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String proveedor;
+    @ManyToOne
+    private Proveedor proveedor;
     private LocalDateTime fecha;
     private Double total;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL)
     private List<CompraDetalle> detalles;
+    
 }

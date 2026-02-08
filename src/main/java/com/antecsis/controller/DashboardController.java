@@ -1,6 +1,7 @@
 package com.antecsis.controller;
 
 import com.antecsis.dto.DashboardVentasDTO;
+import com.antecsis.dto.producto.ProductoMasVendidoDTO;
 import com.antecsis.service.DashboardService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,4 +33,10 @@ public class DashboardController {
 
         return service.ventasPorMes(year, month);
     }
+    
+    @GetMapping("/producto-mas-vendido")
+    public ProductoMasVendidoDTO productoMasVendido() {
+        return service.productoMasVendido();
+    }
+    
 }

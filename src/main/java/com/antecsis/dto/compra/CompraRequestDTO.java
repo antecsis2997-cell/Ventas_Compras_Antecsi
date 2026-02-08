@@ -1,4 +1,4 @@
-package com.antecsis.dto;
+package com.antecsis.dto.compra;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -7,12 +7,12 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter
 @Setter
-public class VentaRequestDTO {
+@Getter
+public class CompraRequestDTO {
     @NotNull
-    private Long clienteId;
+    private Long proveedorId;
 
     @NotEmpty
-    private List<VentaItemDTO> items;
+    private List<CompraItemDTO> items;
 }

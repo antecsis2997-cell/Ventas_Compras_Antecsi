@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.antecsis.dto.ProductoRequestDTO;
-import com.antecsis.dto.ProductoResponseDTO;
+import com.antecsis.dto.producto.ProductoRequestDTO;
+import com.antecsis.dto.producto.ProductoResponseDTO;
 import com.antecsis.service.ProductoService;
 
 import jakarta.validation.Valid;

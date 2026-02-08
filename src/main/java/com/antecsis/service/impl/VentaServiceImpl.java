@@ -1,8 +1,8 @@
 package com.antecsis.service.impl;
 
-import com.antecsis.dto.VentaItemDTO;
-import com.antecsis.dto.VentaRequestDTO;
-import com.antecsis.dto.VentaResponseDTO;
+import com.antecsis.dto.venta.VentaItemDTO;
+import com.antecsis.dto.venta.VentaRequestDTO;
+import com.antecsis.dto.venta.VentaResponseDTO;
 import com.antecsis.entity.Cliente;
 import com.antecsis.entity.Producto;
 import com.antecsis.entity.Venta;
