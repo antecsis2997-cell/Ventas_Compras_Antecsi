@@ -12,6 +12,8 @@ import com.antecsis.repository.CompraRepository;
 import com.antecsis.repository.ProductoRepository;
 import com.antecsis.repository.ProveedorRepository;
 import com.antecsis.service.CompraService;
+import com.antecsis.service.ProveedorService;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,19 +25,19 @@ public class CompraServiceImpl implements CompraService {
 
     private final CompraRepository compraRepo;
     private final ProductoRepository productoRepo;
-    private final ProveedorRepository proveedorRepo;
+    private final ProveedorService proveedorService;
 
-    public CompraServiceImpl(CompraRepository compraRepo, ProductoRepository productoRepo, ProveedorRepository proveedorRepo) {
+    public CompraServiceImpl(CompraRepository compraRepo, ProductoRepository productoRepo, ProveedorService proveedorService) {
         this.compraRepo = compraRepo;
         this.productoRepo = productoRepo;
-        this.proveedorRepo = proveedorRepo;
+        this.proveedorService = proveedorService;
     }
 
     @Override
     public CompraResponseDTO crear(CompraRequestDTO dto) {
         Compra compra = new Compra();
         
-        Proveedor proveedor = proveedorRepo.findById(dto.getProveedorId())
+        Proveedor proveedor = proveedorService.obtenerPorId(dto.getProveedorId())
                 .orElseThrow(() -> new BusinessException("Proveedor no existe"));
         compra.setProveedor(proveedor);
         compra.setFecha(LocalDateTime.now());
@@ -46,7 +48,6 @@ public class CompraServiceImpl implements CompraService {
             Producto producto = productoRepo.findById(item.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto no existe"));
 
-            // SUMA stock
             producto.setStock(producto.getStock() + item.getCantidad());
             productoRepo.save(producto);
 
