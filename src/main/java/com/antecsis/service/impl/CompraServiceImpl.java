@@ -10,7 +10,6 @@ import com.antecsis.entity.Proveedor;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.CompraRepository;
 import com.antecsis.repository.ProductoRepository;
-import com.antecsis.repository.ProveedorRepository;
 import com.antecsis.service.CompraService;
 import com.antecsis.service.ProveedorService;
 

@@ -37,9 +37,9 @@ public class DataInitializer {
 
                 usuarioRepository.save(admin);
 
-                System.out.println("✅ Usuario admin creado");
+                System.out.println("Usuario admin creado");
             } else {
-                System.out.println("ℹ️ Usuario admin ya existe");
+                System.out.println("Usuario admin ya existe");
             }
         };
     }

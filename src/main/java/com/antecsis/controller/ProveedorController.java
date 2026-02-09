@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class ProveedorController {
 	private final ProveedorService proveedorService;
 
-
     @PostMapping
     public Proveedor crear(@RequestBody Proveedor proveedor) {
         return proveedorService.crear(proveedor);

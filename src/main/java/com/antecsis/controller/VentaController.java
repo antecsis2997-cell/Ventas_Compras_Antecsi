@@ -5,6 +5,7 @@ import com.antecsis.dto.venta.VentaResponseDTO;
 import com.antecsis.service.VentaService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class VentaController {
         return ResponseEntity.ok(service.crear(dto));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','CAJERO')")
     @GetMapping
     public ResponseEntity<List<VentaResponseDTO>> listar() {
         return ResponseEntity.ok(service.listar());
