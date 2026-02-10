@@ -9,18 +9,18 @@ import com.antecsis.dto.login.LoginRequestDTO;
 import com.antecsis.dto.login.LoginResponseDTO;
 import com.antecsis.service.AuthService;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
-	private final AuthService service;
+    private final AuthService service;
 
-    public AuthController(AuthService service) {
-        this.service = service;
-    }
-    
     @PostMapping("/login")
-    public LoginResponseDTO login(@RequestBody LoginRequestDTO dto) {
-    	String token = service.login(dto.getUsername(), dto.getPassword());
-    	return new LoginResponseDTO(token);
+    public LoginResponseDTO login(@Valid @RequestBody LoginRequestDTO dto) {
+        String token = service.login(dto.getUsername(), dto.getPassword());
+        return new LoginResponseDTO(token);
     }
 }

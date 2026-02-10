@@ -1,10 +1,11 @@
 package com.antecsis.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.antecsis.dto.InventarioResponseDTO;
 
-import java.util.List;
-
 public interface InventarioService {
-    List<InventarioResponseDTO> listarTodo();
-    List<InventarioResponseDTO> stockBajo(Integer limite);
+    Page<InventarioResponseDTO> listarTodo(Pageable pageable);
+    Page<InventarioResponseDTO> stockBajo(Integer limite, Pageable pageable);
 }

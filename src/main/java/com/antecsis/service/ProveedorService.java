@@ -1,14 +1,15 @@
 package com.antecsis.service;
 
-import java.util.List;
-import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import com.antecsis.entity.Proveedor;
+import com.antecsis.dto.proveedor.ProveedorRequestDTO;
+import com.antecsis.dto.proveedor.ProveedorResponseDTO;
 
 public interface ProveedorService {
-	Proveedor crear(Proveedor proveedor);
-
-	Optional<Proveedor> obtenerPorId(Long id);
-
-    List<Proveedor> listar();
+	ProveedorResponseDTO crear(ProveedorRequestDTO dto);
+	Page<ProveedorResponseDTO> listar(Pageable pageable);
+	ProveedorResponseDTO obtenerPorId(Long id);
+	ProveedorResponseDTO actualizar(Long id, ProveedorRequestDTO dto);
+	void eliminar(Long id);
 }

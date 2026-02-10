@@ -8,9 +8,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VentaItemDTO {
-    @NotNull
+    @NotNull(message = "Producto es obligatorio")
     private Long productoId;
 
-    @Min(1)
+    @NotNull(message = "Cantidad es obligatoria")
+    @Min(value = 1, message = "Cantidad debe ser al menos 1")
     private Integer cantidad;
 }

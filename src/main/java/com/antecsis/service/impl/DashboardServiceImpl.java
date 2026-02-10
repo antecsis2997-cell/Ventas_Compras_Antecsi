@@ -6,42 +6,42 @@ import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.VentaDetalleRepository;
 import com.antecsis.repository.VentaRepository;
 import com.antecsis.service.DashboardService;
-import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
 
     private final VentaRepository ventaRepo;
     private final VentaDetalleRepository ventaDetalleRepo;
 
-    public DashboardServiceImpl(VentaRepository ventaRepo, VentaDetalleRepository ventaDetalleRepo) {
-        this.ventaRepo = ventaRepo;
-        this.ventaDetalleRepo = ventaDetalleRepo;
-    }
-
     @Override
+    @Transactional(readOnly = true)
     public DashboardVentasDTO ventasPorDia(LocalDate dia) {
         LocalDateTime inicio = dia.atStartOfDay();
         LocalDateTime fin = dia.atTime(LocalTime.MAX);
 
         var ventas = ventaRepo.findByFechaBetween(inicio, fin);
 
-        double total = ventas.stream()
-                .mapToDouble(v -> v.getTotal())
-                .sum();
+        BigDecimal total = ventas.stream()
+                .map(v -> v.getTotal() != null ? v.getTotal() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new DashboardVentasDTO(
-                (long) ventas.size(),
-                total
-        );
+        return new DashboardVentasDTO((long) ventas.size(), total);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DashboardVentasDTO ventasPorMes(int year, int month) {
         LocalDate inicioMes = LocalDate.of(year, month, 1);
         LocalDate finMes = inicioMes.withDayOfMonth(inicioMes.lengthOfMonth());
@@ -51,19 +51,17 @@ public class DashboardServiceImpl implements DashboardService {
 
         var ventas = ventaRepo.findByFechaBetween(inicio, fin);
 
-        double total = ventas.stream()
-                .mapToDouble(v -> v.getTotal())
-                .sum();
+        BigDecimal total = ventas.stream()
+                .map(v -> v.getTotal() != null ? v.getTotal() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new DashboardVentasDTO(
-                (long) ventas.size(),
-                total
-        );
+        return new DashboardVentasDTO((long) ventas.size(), total);
     }
 
-	@Override
-	public ProductoMasVendidoDTO productoMasVendido() {
-		List<Object[]> resultado = ventaDetalleRepo.productoMasVendido();
+    @Override
+    @Transactional(readOnly = true)
+    public ProductoMasVendidoDTO productoMasVendido() {
+        List<Object[]> resultado = ventaDetalleRepo.productoMasVendido();
 
         if (resultado.isEmpty()) {
             throw new BusinessException("No existen ventas registradas");
@@ -76,7 +74,5 @@ public class DashboardServiceImpl implements DashboardService {
                 (String) fila[1],
                 (Long) fila[2]
         );
-	}
-
-
+    }
 }

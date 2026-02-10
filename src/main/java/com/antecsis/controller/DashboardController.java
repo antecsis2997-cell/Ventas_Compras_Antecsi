@@ -3,6 +3,10 @@ package com.antecsis.controller;
 import com.antecsis.dto.DashboardVentasDTO;
 import com.antecsis.dto.producto.ProductoMasVendidoDTO;
 import com.antecsis.service.DashboardService;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,31 +16,24 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/dashboard")
+@RequiredArgsConstructor
 public class DashboardController {
     private final DashboardService service;
 
-    public DashboardController(DashboardService service) {
-        this.service = service;
-    }
-
     @GetMapping("/ventas-dia")
-    public DashboardVentasDTO ventasDia(
-            @RequestParam String fecha) {
-
-        return service.ventasPorDia(LocalDate.parse(fecha));
+    public ResponseEntity<DashboardVentasDTO> ventasDia(@RequestParam String fecha) {
+        return ResponseEntity.ok(service.ventasPorDia(LocalDate.parse(fecha)));
     }
 
     @GetMapping("/ventas-mes")
-    public DashboardVentasDTO ventasMes(
+    public ResponseEntity<DashboardVentasDTO> ventasMes(
             @RequestParam int year,
             @RequestParam int month) {
+        return ResponseEntity.ok(service.ventasPorMes(year, month));
+    }
 
-        return service.ventasPorMes(year, month);
-    }
-    
     @GetMapping("/producto-mas-vendido")
-    public ProductoMasVendidoDTO productoMasVendido() {
-        return service.productoMasVendido();
+    public ResponseEntity<ProductoMasVendidoDTO> productoMasVendido() {
+        return ResponseEntity.ok(service.productoMasVendido());
     }
-    
 }

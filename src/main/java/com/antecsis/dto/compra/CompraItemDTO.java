@@ -1,5 +1,7 @@
 package com.antecsis.dto.compra;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -9,12 +11,14 @@ import lombok.Setter;
 @Setter
 @Getter
 public class CompraItemDTO {
-    @NotNull
+    @NotNull(message = "Producto es obligatorio")
     private Long productoId;
 
-    @Min(1)
+    @NotNull(message = "Cantidad es obligatoria")
+    @Min(value = 1, message = "Cantidad debe ser al menos 1")
     private Integer cantidad;
 
-    @Positive
-    private Double precioUnitario;
+    @NotNull(message = "Precio unitario es obligatorio")
+    @Positive(message = "Precio unitario debe ser positivo")
+    private BigDecimal precioUnitario;
 }

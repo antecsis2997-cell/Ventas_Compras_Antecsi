@@ -21,4 +21,10 @@ public class ClienteRequestDTO {
 
     @NotBlank(message = "Teléfono es obligatorio")
     private String telefono;
+
+    private String tipoDocumento;
+
+    private String documento;
+
+    private String direccion;
 }

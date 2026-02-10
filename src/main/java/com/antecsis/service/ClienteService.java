@@ -1,12 +1,15 @@
-
 package com.antecsis.service;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.antecsis.dto.cliente.ClienteRequestDTO;
 import com.antecsis.dto.cliente.ClienteResponseDTO;
 
-import java.util.List;
-
 public interface ClienteService {
     ClienteResponseDTO crear(ClienteRequestDTO dto);
-    List<ClienteResponseDTO> listar();
+    Page<ClienteResponseDTO> listar(Pageable pageable);
+    ClienteResponseDTO obtenerPorId(Long id);
+    ClienteResponseDTO actualizar(Long id, ClienteRequestDTO dto);
+    void eliminar(Long id);
 }

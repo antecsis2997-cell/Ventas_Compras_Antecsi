@@ -3,16 +3,20 @@ package com.antecsis.exception;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<?> handleBusiness(BusinessException ex) {
+    public ResponseEntity<Map<String, Object>> handleBusiness(BusinessException ex) {
         return ResponseEntity.badRequest().body(
                 Map.of(
                         "success", false,
@@ -22,7 +26,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
 
         Map<String, String> errors = new HashMap<>();
 
@@ -32,6 +36,34 @@ public class GlobalExceptionHandler {
                         e.getField(),
                         e.getDefaultMessage()
                 ));
-        return ResponseEntity.badRequest().body(errors);
+
+        return ResponseEntity.badRequest().body(
+                Map.of(
+                        "success", false,
+                        "errors", errors
+                )
+        );
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
+        log.error("Error inesperado: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        "success", false,
+                        "message", "Error interno del servidor"
+                )
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+        log.error("Error general: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        "success", false,
+                        "message", "Error interno del servidor"
+                )
+        );
     }
 }

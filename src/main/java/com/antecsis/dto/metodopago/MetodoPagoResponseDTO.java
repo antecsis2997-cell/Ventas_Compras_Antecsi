@@ -1,4 +1,4 @@
-package com.antecsis.dto.proveedor;
+package com.antecsis.dto.metodopago;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,12 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ProveedorResponseDTO {
+public class MetodoPagoResponseDTO {
     private Long id;
     private String nombre;
-    private String ruc;
-    private String email;
-    private String telefono;
-    private String direccion;
     private Boolean activo;
 }

@@ -1,5 +1,7 @@
 package com.antecsis.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,5 +28,7 @@ public class CompraDetalle {
     private Producto producto;
 
     private Integer cantidad;
-    private Double precioUnitario;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal precioUnitario;
 }

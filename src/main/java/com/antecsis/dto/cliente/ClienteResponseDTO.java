@@ -12,4 +12,8 @@ public class ClienteResponseDTO {
     private String nombre;
     private String email;
     private String telefono;
+    private String tipoDocumento;
+    private String documento;
+    private String direccion;
+    private Boolean activo;
 }

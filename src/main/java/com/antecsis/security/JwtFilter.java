@@ -15,11 +15,17 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
-public class JwtFilter extends OncePerRequestFilter{
-	
-	@Override
+@RequiredArgsConstructor
+public class JwtFilter extends OncePerRequestFilter {
+
+    private final JwtUtil jwtUtil;
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -32,12 +38,12 @@ public class JwtFilter extends OncePerRequestFilter{
             String token = authHeader.substring(7);
 
             try {
-                Claims claims = JwtUtil.validarToken(token);
+                Claims claims = jwtUtil.validarToken(token);
                 String username = claims.getSubject();
                 String rol = claims.get("rol", String.class);
-                
+
                 List<GrantedAuthority> authorities =
-                	    List.of(new SimpleGrantedAuthority("ROLE_" + rol));
+                        List.of(new SimpleGrantedAuthority("ROLE_" + rol));
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
@@ -49,6 +55,7 @@ public class JwtFilter extends OncePerRequestFilter{
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
             } catch (Exception e) {
+                log.warn("Token JWT inválido: {}", e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }

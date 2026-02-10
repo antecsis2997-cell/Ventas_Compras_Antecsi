@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,11 +22,27 @@ public class Venta {
     private Long id;
 
     @ManyToOne(optional = false)
+    @JoinColumn(name = "cliente_id")
     private Cliente cliente;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
+
+    @ManyToOne
+    @JoinColumn(name = "metodo_pago_id")
+    private MetodoPago metodoPago;
 
     private LocalDateTime fecha;
 
-    private Double total;
+    @Column(precision = 12, scale = 2)
+    private BigDecimal total;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoVenta estado = EstadoVenta.COMPLETADA;
+
+    private String observaciones;
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     private List<VentaDetalle> detalles;

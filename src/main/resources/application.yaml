@@ -1,10 +1,11 @@
-server:port: 8080
+server:
+  port: 8080
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ventas_db
-    username: ventas_user
-    password: PasswordSeguro123
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ventas_db}
+    username: ${DB_USERNAME:ventas_user}
+    password: ${DB_PASSWORD:PasswordSeguro123}
 
   jpa:
     hibernate:
@@ -14,3 +15,16 @@ spring:
       hibernate:
         default_schema: public
 
+  sql:
+    init:
+      mode: never
+
+jwt:
+  secret: ${JWT_SECRET:CLAVE_SUPER_SECRETA_123456789_ANTECSIS_SEGURA_2026}
+  expiration: ${JWT_EXPIRATION:3600000}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,5 +1,6 @@
 package com.antecsis.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,14 +13,24 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "proveedores")
-@Getter 
-@Setter 
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Proveedor {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String nombre;
+
+    @Column(unique = true)
+    private String ruc;
+
+    private String email;
     private String telefono;
+    private String direccion;
+
+    private Boolean activo = true;
 }

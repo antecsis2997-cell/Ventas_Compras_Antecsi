@@ -1,5 +1,7 @@
 package com.antecsis.dto.producto;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,14 +16,24 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductoRequestDTO {
-	@NotBlank(message = "Nombre es obligatorio")
+
+    private String codigo;
+
+    @NotBlank(message = "Nombre es obligatorio")
     private String nombre;
 
-    @NotNull
-    @Positive(message = "Precio debe ser mayor a 0")
-    private Double precio;
+    private String descripcion;
 
-    @NotNull
+    @NotNull(message = "Precio de venta es obligatorio")
+    @Positive(message = "Precio de venta debe ser mayor a 0")
+    private BigDecimal precio;
+
+    @Positive(message = "Precio de compra debe ser mayor a 0")
+    private BigDecimal precioCompra;
+
+    @NotNull(message = "Stock es obligatorio")
     @Min(value = 0, message = "Stock no puede ser negativo")
     private Integer stock;
+
+    private Long categoriaId;
 }
