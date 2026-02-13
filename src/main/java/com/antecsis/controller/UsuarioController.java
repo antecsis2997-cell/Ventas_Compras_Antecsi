@@ -1,5 +1,7 @@
 package com.antecsis.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
 
+@Tag(name = "Usuarios", description = "Creación de usuarios (roles Cajero, Ventas, Logística, Administración). Solo SUPERUSUARIO o ADMIN.")
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor

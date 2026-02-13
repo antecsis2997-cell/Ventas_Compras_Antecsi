@@ -17,9 +17,12 @@ import com.antecsis.dto.metodopago.MetodoPagoRequestDTO;
 import com.antecsis.dto.metodopago.MetodoPagoResponseDTO;
 import com.antecsis.service.MetodoPagoService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Métodos de pago", description = "CRUD de métodos de pago")
 @RestController
 @RequestMapping("/api/metodos-pago")
 @RequiredArgsConstructor

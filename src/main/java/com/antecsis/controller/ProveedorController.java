@@ -1,5 +1,7 @@
 package com.antecsis.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ import com.antecsis.service.ProveedorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Proveedores", description = "CRUD de proveedores")
 @RestController
 @RequestMapping("/api/proveedores")
 @RequiredArgsConstructor

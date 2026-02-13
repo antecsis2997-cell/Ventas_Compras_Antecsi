@@ -1,5 +1,7 @@
 package com.antecsis.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ import com.antecsis.service.CategoriaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Categorías", description = "Categorías de productos")
 @RestController
 @RequestMapping("/api/categorias")
 @RequiredArgsConstructor

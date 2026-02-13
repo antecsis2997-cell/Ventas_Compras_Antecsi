@@ -1,6 +1,7 @@
 package com.antecsis.controller;
 
 import com.antecsis.dto.sector.SectorRequestDTO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.antecsis.dto.sector.SectorResponseDTO;
 import com.antecsis.service.SectorService;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Sectores", description = "Sectores/sedes: nombre, teléfono, dirección")
 @RestController
 @RequestMapping("/api/sectores")
 @RequiredArgsConstructor

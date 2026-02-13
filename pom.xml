@@ -100,6 +100,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
+		<!-- OpenAPI / Swagger (2.8.x compatible con Spring Boot 3.5 / Spring Framework 6.2) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.8.9</version>
+		</dependency>
 	</dependencies>
 
 	<build>

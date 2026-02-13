@@ -12,8 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Compras", description = "Registro de compras, listado y anulación")
 @RestController
 @RequestMapping("/api/compras")
 @RequiredArgsConstructor

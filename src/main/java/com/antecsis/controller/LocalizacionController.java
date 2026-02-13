@@ -1,6 +1,7 @@
 package com.antecsis.controller;
 
 import com.antecsis.dto.localizacion.LocalizacionRequestDTO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.antecsis.dto.localizacion.LocalizacionResponseDTO;
 import com.antecsis.service.LocalizacionService;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Localizaciones", description = "Localizaciones: descripción e imagen (jpg, png, webp)")
 @RestController
 @RequestMapping("/api/localizaciones")
 @RequiredArgsConstructor

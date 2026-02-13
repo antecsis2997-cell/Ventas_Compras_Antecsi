@@ -12,8 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.time.LocalDate;
 
+@Tag(name = "Reportes", description = "Exportación de ventas por rango de fechas: Excel (.xlsx) y PDF")
 @Slf4j
 @RestController
 @RequestMapping("/api/reportes")
@@ -22,10 +27,11 @@ public class ReporteController {
 
     private final ReporteService reporteService;
 
+    @Operation(summary = "Exportar ventas a Excel", description = "Descarga un archivo .xlsx con las ventas entre fechaInicio y fechaFin.")
     @GetMapping("/ventas-excel")
     public ResponseEntity<byte[]> ventasExcel(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+            @Parameter(description = "Fecha inicio (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @Parameter(description = "Fecha fin (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
         try {
             byte[] bytes = reporteService.exportarVentasExcel(fechaInicio, fechaFin);
             String filename = "ventas_" + fechaInicio + "_" + fechaFin + ".xlsx";
@@ -40,10 +46,11 @@ public class ReporteController {
         }
     }
 
+    @Operation(summary = "Exportar ventas a PDF", description = "Descarga un archivo PDF con las ventas entre fechaInicio y fechaFin.")
     @GetMapping("/ventas-pdf")
     public ResponseEntity<byte[]> ventasPdf(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+            @Parameter(description = "Fecha inicio (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @Parameter(description = "Fecha fin (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
         try {
             byte[] bytes = reporteService.exportarVentasPdf(fechaInicio, fechaFin);
             String filename = "ventas_" + fechaInicio + "_" + fechaFin + ".pdf";

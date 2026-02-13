@@ -9,8 +9,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Mensajes", description = "CHAT: mensajes entre usuarios. Receptor, ITEM, descripción, precio, estado (EMERGENTE/LEVE).")
 @RestController
 @RequestMapping("/api/mensajes")
 @RequiredArgsConstructor

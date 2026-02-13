@@ -4,6 +4,8 @@ import com.antecsis.dto.cliente.ClienteRequestDTO;
 import com.antecsis.dto.cliente.ClienteResponseDTO;
 import com.antecsis.service.ClienteService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Clientes", description = "CRUD de clientes")
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
