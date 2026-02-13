@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class MetodoPagoController {
     private final MetodoPagoService service;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPERUSUARIO','ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<MetodoPagoResponseDTO> crear(@Valid @RequestBody MetodoPagoRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(dto));
@@ -42,7 +42,7 @@ public class MetodoPagoController {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPERUSUARIO','ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.eliminar(id);

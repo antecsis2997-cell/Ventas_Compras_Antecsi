@@ -14,5 +14,12 @@ public class UsuarioCreateRequest {
     private String password;
 
     @NotBlank
-    private String rol;
+    private String rol;  // ADMIN, CAJERO o ALMACENERO (solo SUPERUSUARIO puede crear)
+
+    private String nombre;
+    private String apellido;
+    private String correo;
+    private Integer edad;
+    private String cargo;
+    private Long sedeId;  // Sector (Sede de Cajero / Sede de Venta)
 }

@@ -19,5 +19,8 @@ public class ProductoResponseDTO {
 	private Integer stock;
 	private Long categoriaId;
 	private String categoriaNombre;
+	private String unidadMedida;
+	private String imagenUrl;
+	private Integer stockMinimoAlerta;
 	private Boolean activo;
 }

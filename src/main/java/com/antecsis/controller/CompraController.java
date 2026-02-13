@@ -35,7 +35,7 @@ public class CompraController {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
     @PatchMapping("/{id}/anular")
     public ResponseEntity<CompraResponseDTO> anular(@PathVariable Long id) {
         return ResponseEntity.ok(service.anular(id));

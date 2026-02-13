@@ -25,7 +25,7 @@ public class VentaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(dto));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','CAJERO')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping
     public ResponseEntity<Page<VentaResponseDTO>> listar(Pageable pageable) {
         return ResponseEntity.ok(service.listar(pageable));
@@ -36,7 +36,7 @@ public class VentaController {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
     @PatchMapping("/{id}/anular")
     public ResponseEntity<VentaResponseDTO> anular(@PathVariable Long id) {
         return ResponseEntity.ok(service.anular(id));

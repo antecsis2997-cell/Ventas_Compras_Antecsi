@@ -33,6 +33,9 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setPrecio(dto.getPrecio());
         producto.setPrecioCompra(dto.getPrecioCompra());
         producto.setStock(dto.getStock());
+        producto.setUnidadMedida(dto.getUnidadMedida());
+        producto.setImagenUrl(dto.getImagenUrl());
+        producto.setStockMinimoAlerta(dto.getStockMinimoAlerta());
         producto.setActivo(true);
 
         if (dto.getCategoriaId() != null) {
@@ -71,6 +74,9 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setPrecio(dto.getPrecio());
         producto.setPrecioCompra(dto.getPrecioCompra());
         producto.setStock(dto.getStock());
+        producto.setUnidadMedida(dto.getUnidadMedida());
+        producto.setImagenUrl(dto.getImagenUrl());
+        producto.setStockMinimoAlerta(dto.getStockMinimoAlerta());
 
         if (dto.getCategoriaId() != null) {
             Categoria cat = categoriaRepository.findById(dto.getCategoriaId())
@@ -104,6 +110,9 @@ public class ProductoServiceImpl implements ProductoService {
                 p.getStock(),
                 p.getCategoria() != null ? p.getCategoria().getId() : null,
                 p.getCategoria() != null ? p.getCategoria().getNombre() : null,
+                p.getUnidadMedida(),
+                p.getImagenUrl(),
+                p.getStockMinimoAlerta(),
                 p.getActivo()
         );
     }

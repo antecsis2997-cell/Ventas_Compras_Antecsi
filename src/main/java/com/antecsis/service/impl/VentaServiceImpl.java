@@ -32,6 +32,7 @@ public class VentaServiceImpl implements VentaService {
     private final ClienteRepository clienteRepo;
     private final UsuarioRepository usuarioRepo;
     private final MetodoPagoRepository metodoPagoRepo;
+    private final HistorialPedidoRepository historialPedidoRepo;
 
     @Override
     @Transactional
@@ -47,6 +48,14 @@ public class VentaServiceImpl implements VentaService {
         venta.setFecha(LocalDateTime.now());
         venta.setEstado(EstadoVenta.COMPLETADA);
         venta.setObservaciones(dto.getObservaciones());
+        if (dto.getTipoDocumento() != null && !dto.getTipoDocumento().isBlank()) {
+            try {
+                venta.setTipoDocumento(TipoDocumentoVenta.valueOf(dto.getTipoDocumento().toUpperCase().trim()));
+            } catch (IllegalArgumentException e) {
+                throw new BusinessException("Tipo de documento inválido. Use FACTURA o BOLETA.");
+            }
+        }
+        venta.setNumeroDocumento(dto.getNumeroDocumento());
 
         if (dto.getMetodoPagoId() != null) {
             MetodoPago mp = metodoPagoRepo.findById(dto.getMetodoPagoId())
@@ -84,6 +93,21 @@ public class VentaServiceImpl implements VentaService {
         venta.setDetalles(detalles);
 
         Venta guardada = ventaRepo.save(venta);
+
+        // Historial_Pedidos: carga rápida para reportes (documento: LOAD 1ms)
+        LocalDateTime fechaVenta = guardada.getFecha();
+        for (VentaDetalle det : guardada.getDetalles()) {
+            HistorialPedido hp = new HistorialPedido();
+            hp.setVenta(guardada);
+            hp.setProducto(det.getProducto());
+            hp.setNombreProducto(det.getProducto().getNombre());
+            hp.setCantidad(det.getCantidad());
+            hp.setPrecioUnitario(det.getPrecioUnitario());
+            hp.setSubtotal(det.getPrecioUnitario().multiply(BigDecimal.valueOf(det.getCantidad())));
+            hp.setFecha(fechaVenta);
+            historialPedidoRepo.save(hp);
+        }
+
         log.info("Venta #{} creada por {} - Total: {} - Cliente: {}",
                 guardada.getId(), usuario.getUsername(), total, cliente.getNombre());
 
@@ -144,6 +168,8 @@ public class VentaServiceImpl implements VentaService {
                 v.getFecha(),
                 v.getTotal(),
                 v.getEstado().name(),
+                v.getTipoDocumento() != null ? v.getTipoDocumento().name() : null,
+                v.getNumeroDocumento(),
                 v.getObservaciones()
         );
     }

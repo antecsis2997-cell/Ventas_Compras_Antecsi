@@ -16,6 +16,12 @@ public class VentaRequestDTO {
 
     private Long metodoPagoId;
 
+    /** FACTURA o BOLETA. */
+    private String tipoDocumento;
+
+    /** Número de factura o boleta. */
+    private String numeroDocumento;
+
     private String observaciones;
 
     @NotEmpty(message = "Debe incluir al menos un item")

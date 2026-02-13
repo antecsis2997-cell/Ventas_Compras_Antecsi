@@ -33,6 +33,16 @@ public class Usuario {
     private String nombre;
     private String apellido;
     private String correo;
+    private Integer edad;
+    private String cargo;  // Cargo del personal (documento: Ingresar Datos Usuario)
+
+    @ManyToOne
+    @JoinColumn(name = "sede_id")
+    private Sector sede;  // Sede de Cajero / Sede de Venta (documento)
+
+    /** Usuario principal que creó este usuario (para reglas de licencias: max 3 Cajeros, 1 Ventas). */
+    @Column(name = "usuario_principal_id")
+    private Long usuarioPrincipalId;
 
     @ManyToOne
     @JoinColumn(name = "rol_id")

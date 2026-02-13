@@ -10,7 +10,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: true  # En producción usar perfil 'prod' (show-sql: false)
     properties:
       hibernate:
         default_schema: public
@@ -19,6 +19,7 @@ spring:
     init:
       mode: never
 
+# JWT: en producción definir JWT_SECRET (mín. 32 caracteres) y JWT_EXPIRATION por variable de entorno
 jwt:
   secret: ${JWT_SECRET:CLAVE_SUPER_SECRETA_123456789_ANTECSIS_SEGURA_2026}
   expiration: ${JWT_EXPIRATION:3600000}

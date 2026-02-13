@@ -29,9 +29,10 @@ public class Producto {
 	@Column(unique = true)
 	private String codigo;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 50)
 	private String nombre;
 
+	@Column(length = 50)
 	private String descripcion;
 
 	@Column(nullable = false, precision = 12, scale = 2)
@@ -46,6 +47,18 @@ public class Producto {
 	@ManyToOne
 	@JoinColumn(name = "categoria_id")
 	private Categoria categoria;
+
+	/** Unidad del producto: UND, KG, MG, GRAMOS (documento INSUMOS). */
+	@Column(name = "unidad_medida", length = 20)
+	private String unidadMedida;
+
+	/** Ruta o URL de imagen (PNG, JPG). */
+	@Column(name = "imagen_url", length = 500)
+	private String imagenUrl;
+
+	/** Umbral para alerta de stock bajo (pop-up). */
+	@Column(name = "stock_minimo_alerta")
+	private Integer stockMinimoAlerta;
 
 	private Boolean activo = true;
 }

@@ -22,7 +22,7 @@ import java.util.Map;
 public class UsuarioController {
     private final UsuarioService usuarioService;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPERUSUARIO','ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Map<String, Object>> crearUsuario(@RequestBody @Valid UsuarioCreateRequest dto) {
         usuarioService.crearUsuario(dto);

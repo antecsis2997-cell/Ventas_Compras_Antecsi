@@ -1,5 +1,6 @@
 package com.antecsis.controller;
 
+import com.antecsis.dto.DashboardPedidosEstadoDTO;
 import com.antecsis.dto.DashboardVentasDTO;
 import com.antecsis.dto.producto.ProductoMasVendidoDTO;
 import com.antecsis.service.DashboardService;
@@ -32,8 +33,21 @@ public class DashboardController {
         return ResponseEntity.ok(service.ventasPorMes(year, month));
     }
 
+    @GetMapping("/ventas-anio")
+    public ResponseEntity<DashboardVentasDTO> ventasAnio(@RequestParam int year) {
+        return ResponseEntity.ok(service.ventasPorAnio(year));
+    }
+
     @GetMapping("/producto-mas-vendido")
     public ResponseEntity<ProductoMasVendidoDTO> productoMasVendido() {
         return ResponseEntity.ok(service.productoMasVendido());
+    }
+
+    /** Dashboard Administración: pedidos facturados (COMPLETADA) y anulados (ANULADA) en el mes. */
+    @GetMapping("/pedidos-estado")
+    public ResponseEntity<DashboardPedidosEstadoDTO> pedidosEstado(
+            @RequestParam int year,
+            @RequestParam int month) {
+        return ResponseEntity.ok(service.pedidosFacturadosYAnuladosPorMes(year, month));
     }
 }

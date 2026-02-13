@@ -1,0 +1,11 @@
+# Perfil producción: buenas prácticas
+spring:
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never
+
+# En producción usar variables de entorno: DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, JWT_EXPIRATION

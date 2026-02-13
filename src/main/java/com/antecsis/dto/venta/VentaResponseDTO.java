@@ -19,5 +19,7 @@ public class VentaResponseDTO {
     private LocalDateTime fecha;
     private BigDecimal total;
     private String estado;
+    private String tipoDocumento;
+    private String numeroDocumento;
     private String observaciones;
 }

@@ -42,6 +42,15 @@ public class Venta {
     @Column(nullable = false)
     private EstadoVenta estado = EstadoVenta.COMPLETADA;
 
+    /** FACTURA o BOLETA (documento: modelo Factura y Boleta). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_documento")
+    private TipoDocumentoVenta tipoDocumento;
+
+    /** Número de factura o boleta. */
+    @Column(name = "numero_documento", length = 50)
+    private String numeroDocumento;
+
     private String observaciones;
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
