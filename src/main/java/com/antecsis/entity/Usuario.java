@@ -1,5 +1,7 @@
 package com.antecsis.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,8 +35,9 @@ public class Usuario {
     private String nombre;
     private String apellido;
     private String correo;
-    private Integer edad;
-    private String cargo;  // Cargo del personal (documento: Ingresar Datos Usuario)
+
+    @Column(name = "fecha_nacimiento")
+    private LocalDate fechaNacimiento;
 
     @ManyToOne
     @JoinColumn(name = "sede_id")

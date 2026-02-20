@@ -1,5 +1,7 @@
 package com.antecsis.dto.usuario;
 
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +21,6 @@ public class UsuarioCreateRequest {
     private String nombre;
     private String apellido;
     private String correo;
-    private Integer edad;
-    private String cargo;
+    private LocalDate fechaNacimiento;
     private Long sedeId;  // Sector (Sede de Cajero / Sede de Venta)
 }

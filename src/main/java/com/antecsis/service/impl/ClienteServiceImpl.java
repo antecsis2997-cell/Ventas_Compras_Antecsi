@@ -42,7 +42,10 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ClienteResponseDTO> listar(Pageable pageable) {
+    public Page<ClienteResponseDTO> listar(Pageable pageable, String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            return repository.buscarPorNombreODocumento(search.trim(), pageable).map(this::toResponseDTO);
+        }
         return repository.findAll(pageable).map(this::toResponseDTO);
     }
 

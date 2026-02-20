@@ -10,6 +10,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.antecsis.entity.Usuario;
+import com.antecsis.repository.UsuarioRepository;
+
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     protected void doFilterInternal(
@@ -40,8 +44,13 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 Claims claims = jwtUtil.validarToken(token);
                 String username = claims.getSubject();
-                String rol = claims.get("rol", String.class);
-
+                Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
+                if (usuario == null || !Boolean.TRUE.equals(usuario.getActivo())) {
+                    log.info("Usuario {} desactivado o inexistente, rechazando petición", username);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+                String rol = usuario.getRol() != null ? usuario.getRol().getNombre() : claims.get("rol", String.class);
                 List<GrantedAuthority> authorities =
                         List.of(new SimpleGrantedAuthority("ROLE_" + rol));
 

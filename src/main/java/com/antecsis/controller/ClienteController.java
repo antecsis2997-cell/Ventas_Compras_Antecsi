@@ -28,8 +28,10 @@ public class ClienteController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ClienteResponseDTO>> listar(Pageable pageable) {
-        return ResponseEntity.ok(service.listar(pageable));
+    public ResponseEntity<Page<ClienteResponseDTO>> listar(
+            Pageable pageable,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(service.listar(pageable, search));
     }
 
     @GetMapping("/{id}")

@@ -1,8 +1,11 @@
 package com.antecsis.service;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.antecsis.dto.login.MeResponseDTO;
 import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.UsuarioRepository;
@@ -37,5 +40,18 @@ public class AuthService {
                 user.getUsername(),
                 user.getRol().getNombre()
         );
+    }
+
+    public MeResponseDTO getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new BusinessException("No autenticado");
+        }
+        Usuario user = usuarioRepo.findByUsername(auth.getName())
+                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        Long sedeId = user.getSede() != null ? user.getSede().getId() : null;
+        String sedeNombre = user.getSede() != null ? user.getSede().getNombreSector() : null;
+        String rolNombre = user.getRol() != null ? user.getRol().getNombre() : null;
+        return new MeResponseDTO(user.getUsername(), rolNombre, sedeId, sedeNombre);
     }
 }

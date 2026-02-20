@@ -8,7 +8,7 @@ import com.antecsis.dto.cliente.ClienteResponseDTO;
 
 public interface ClienteService {
     ClienteResponseDTO crear(ClienteRequestDTO dto);
-    Page<ClienteResponseDTO> listar(Pageable pageable);
+    Page<ClienteResponseDTO> listar(Pageable pageable, String search);
     ClienteResponseDTO obtenerPorId(Long id);
     ClienteResponseDTO actualizar(Long id, ClienteRequestDTO dto);
     void eliminar(Long id);

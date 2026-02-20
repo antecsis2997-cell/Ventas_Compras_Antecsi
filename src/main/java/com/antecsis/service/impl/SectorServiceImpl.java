@@ -5,6 +5,7 @@ import com.antecsis.dto.sector.SectorResponseDTO;
 import com.antecsis.entity.Sector;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.SectorRepository;
+import com.antecsis.repository.UsuarioRepository;
 import com.antecsis.service.SectorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SectorServiceImpl implements SectorService {
 
     private final SectorRepository repository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
@@ -56,6 +58,9 @@ public class SectorServiceImpl implements SectorService {
     @Transactional
     public void eliminar(Long id) {
         if (!repository.existsById(id)) throw new BusinessException("Sector no existe");
+        if (usuarioRepository.existsBySede_Id(id)) {
+            throw new BusinessException("No se puede eliminar el sector porque tiene usuarios asignados. Reasigne o elimine los usuarios primero.");
+        }
         repository.deleteById(id);
     }
 
