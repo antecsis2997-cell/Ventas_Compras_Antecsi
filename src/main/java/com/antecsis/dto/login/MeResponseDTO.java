@@ -14,6 +14,8 @@ import lombok.Setter;
 public class MeResponseDTO {
     @Schema(description = "Nombre de usuario (login)")
     private String username;
+    private String nombre;
+    private String apellido;
     @Schema(description = "Nombre del rol: SUPERUSUARIO, ADMIN, CAJERO, etc.")
     private String rolNombre;
     @Schema(description = "ID de la sede asignada (null si no tiene)")

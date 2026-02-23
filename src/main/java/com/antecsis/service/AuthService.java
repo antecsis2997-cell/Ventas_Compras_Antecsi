@@ -52,6 +52,6 @@ public class AuthService {
         Long sedeId = user.getSede() != null ? user.getSede().getId() : null;
         String sedeNombre = user.getSede() != null ? user.getSede().getNombreSector() : null;
         String rolNombre = user.getRol() != null ? user.getRol().getNombre() : null;
-        return new MeResponseDTO(user.getUsername(), rolNombre, sedeId, sedeNombre);
+        return new MeResponseDTO(user.getUsername(), user.getNombre(), user.getApellido(), rolNombre, sedeId, sedeNombre);
     }
 }

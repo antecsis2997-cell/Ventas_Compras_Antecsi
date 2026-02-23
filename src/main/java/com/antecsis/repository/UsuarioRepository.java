@@ -1,5 +1,6 @@
 package com.antecsis.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -22,4 +23,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
 	/** Cuenta admins en una sede (máx 1 por sede). */
 	long countBySede_IdAndRol_Nombre(Long sedeId, String rolNombre);
+
+	/** Buscar usuarios por correo (autocomplete remitente). */
+	List<Usuario> findTop10ByCorreoContainingIgnoreCaseOrderByCorreo(String correo);
 }
