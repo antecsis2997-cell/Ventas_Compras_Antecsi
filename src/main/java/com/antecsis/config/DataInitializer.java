@@ -6,10 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.antecsis.entity.MetodoPago;
+import com.antecsis.entity.Modulo;
 import com.antecsis.entity.Rol;
 import com.antecsis.entity.Sector;
 import com.antecsis.entity.Usuario;
 import com.antecsis.repository.MetodoPagoRepository;
+import com.antecsis.repository.ModuloRepository;
 import com.antecsis.repository.RolRepository;
 import com.antecsis.repository.SectorRepository;
 import com.antecsis.repository.UsuarioRepository;
@@ -26,6 +28,7 @@ public class DataInitializer {
             UsuarioRepository usuarioRepository,
             MetodoPagoRepository metodoPagoRepository,
             SectorRepository sectorRepository,
+            ModuloRepository moduloRepository,
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
@@ -67,6 +70,23 @@ public class DataInitializer {
             crearMetodoPagoSiNoExiste(metodoPagoRepository, "TRANSFERENCIA");
             crearMetodoPagoSiNoExiste(metodoPagoRepository, "YAPE");
             crearMetodoPagoSiNoExiste(metodoPagoRepository, "PLIN");
+
+            // ── Módulos del sistema (catálogo para permisos por usuario) ──
+            crearModuloSiNoExiste(moduloRepository, "DASHBOARD",            "Dashboard",            "Panel principal con resumen",              "dashboard",         1);
+            crearModuloSiNoExiste(moduloRepository, "VENTAS",               "Ventas",               "Registro y gestión de ventas",             "shopping_cart",     2);
+            crearModuloSiNoExiste(moduloRepository, "COMPRAS",              "Compras",              "Registro y gestión de compras",            "shopping_bag",      3);
+            crearModuloSiNoExiste(moduloRepository, "PRODUCTOS",            "Productos",            "Catálogo de productos",                    "inventory_2",       4);
+            crearModuloSiNoExiste(moduloRepository, "INVENTARIO",           "Inventario",           "Control de stock e inventario",            "warehouse",         5);
+            crearModuloSiNoExiste(moduloRepository, "CLIENTES",             "Clientes",             "Gestión de clientes",                     "people",            6);
+            crearModuloSiNoExiste(moduloRepository, "PROVEEDORES",          "Proveedores",          "Gestión de proveedores",                  "local_shipping",    7);
+            crearModuloSiNoExiste(moduloRepository, "REPORTES",             "Reportes",             "Reportes y estadísticas",                 "assessment",        8);
+            crearModuloSiNoExiste(moduloRepository, "SOLICITUDES_STOCK",    "Solicitudes de Stock", "Solicitudes de reposición de stock",      "assignment",        9);
+            crearModuloSiNoExiste(moduloRepository, "SOLICITUDES_PRODUCTO", "Solicitudes de Producto", "Solicitudes de nuevos productos",      "note_add",         10);
+            crearModuloSiNoExiste(moduloRepository, "CATEGORIAS",           "Categorías",           "Gestión de categorías de productos",      "category",         11);
+            crearModuloSiNoExiste(moduloRepository, "METODOS_PAGO",         "Métodos de Pago",      "Configuración de métodos de pago",        "payment",          12);
+            crearModuloSiNoExiste(moduloRepository, "HISTORIAL_PEDIDOS",    "Historial de Pedidos", "Historial de pedidos realizados",         "history",          13);
+            crearModuloSiNoExiste(moduloRepository, "MENSAJES",             "Mensajes",             "Mensajería interna",                      "mail",             14);
+            crearModuloSiNoExiste(moduloRepository, "USUARIOS",             "Usuarios",             "Gestión de usuarios y permisos",          "manage_accounts",  15);
         };
     }
 
@@ -86,6 +106,21 @@ public class DataInitializer {
             mp.setActivo(true);
             repo.save(mp);
             log.info("Método de pago {} creado", nombre);
+        }
+    }
+
+    private void crearModuloSiNoExiste(ModuloRepository repo, String codigo, String nombre,
+                                        String descripcion, String icono, int orden) {
+        if (repo.findByCodigo(codigo).isEmpty()) {
+            Modulo m = new Modulo();
+            m.setCodigo(codigo);
+            m.setNombre(nombre);
+            m.setDescripcion(descripcion);
+            m.setIcono(icono);
+            m.setOrden(orden);
+            m.setActivo(true);
+            repo.save(m);
+            log.info("Módulo {} creado", codigo);
         }
     }
 }

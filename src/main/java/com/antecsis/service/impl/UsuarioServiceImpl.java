@@ -2,7 +2,11 @@ package com.antecsis.service.impl;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,10 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.antecsis.dto.usuario.UsuarioCreateRequest;
 import com.antecsis.dto.usuario.UsuarioResponseDTO;
 import com.antecsis.dto.usuario.UsuarioUpdateRequest;
+import com.antecsis.entity.Modulo;
 import com.antecsis.entity.Rol;
 import com.antecsis.entity.Sector;
 import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
+import com.antecsis.repository.ModuloRepository;
 import com.antecsis.repository.RolRepository;
 import com.antecsis.repository.SectorRepository;
 import com.antecsis.repository.UsuarioRepository;
@@ -38,9 +44,26 @@ public class UsuarioServiceImpl implements UsuarioService {
     private static final int MAX_CAJEROS_POR_LICENCIA = 3;
     private static final int MAX_VENTAS_POR_LICENCIA = 1;
 
+    private static final Map<String, Set<String>> MODULOS_POR_DEFECTO = Map.of(
+        "ADMIN", Set.of("DASHBOARD", "VENTAS", "COMPRAS", "PRODUCTOS", "INVENTARIO",
+                "CLIENTES", "PROVEEDORES", "REPORTES", "SOLICITUDES_STOCK",
+                "SOLICITUDES_PRODUCTO", "CATEGORIAS", "METODOS_PAGO",
+                "HISTORIAL_PEDIDOS", "MENSAJES", "USUARIOS"),
+        "CAJERO", Set.of("DASHBOARD", "VENTAS", "CLIENTES", "METODOS_PAGO"),
+        "ALMACENERO", Set.of("DASHBOARD", "INVENTARIO", "PRODUCTOS", "CATEGORIAS",
+                "SOLICITUDES_STOCK"),
+        "VENTAS", Set.of("DASHBOARD", "VENTAS", "CLIENTES", "PRODUCTOS",
+                "REPORTES", "METODOS_PAGO"),
+        "LOGISTICA", Set.of("DASHBOARD", "INVENTARIO", "COMPRAS", "PROVEEDORES",
+                "SOLICITUDES_STOCK", "SOLICITUDES_PRODUCTO", "HISTORIAL_PEDIDOS"),
+        "ADMINISTRACION", Set.of("DASHBOARD", "REPORTES", "VENTAS", "COMPRAS",
+                "CLIENTES", "PROVEEDORES", "MENSAJES")
+    );
+
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final SectorRepository sectorRepository;
+    private final ModuloRepository moduloRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -106,8 +129,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setUsuarioPrincipalId(principalId);
         usuario.setActivo(true);
 
+        List<Modulo> modulosPorDefecto;
+        if ("ADMIN".equals(dto.getRol())) {
+            modulosPorDefecto = moduloRepository.findByActivoTrueOrderByOrdenAsc();
+        } else {
+            Set<String> codigosPorDefecto = MODULOS_POR_DEFECTO.getOrDefault(dto.getRol(), Set.of("DASHBOARD"));
+            modulosPorDefecto = moduloRepository.findByCodigoInAndActivoTrue(codigosPorDefecto);
+        }
+        usuario.setModulos(new HashSet<>(modulosPorDefecto));
+
         usuarioRepository.save(usuario);
-        log.info("Usuario creado por {}: {} con rol {}", principal.getUsername(), dto.getUsername(), dto.getRol());
+        log.info("Usuario creado por {}: {} con rol {} y {} módulos",
+                principal.getUsername(), dto.getUsername(), dto.getRol(), modulosPorDefecto.size());
     }
 
     @Override
@@ -203,6 +236,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (u.getFechaNacimiento() != null) {
             edad = Period.between(u.getFechaNacimiento(), LocalDate.now()).getYears();
         }
+        Set<String> modulos = u.getModulos() != null
+                ? u.getModulos().stream().map(Modulo::getCodigo).collect(Collectors.toSet())
+                : Set.of();
         return new UsuarioResponseDTO(
                 u.getId(),
                 u.getUsername(),
@@ -214,7 +250,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 sedeId,
                 sedeNombre,
                 rolNombre,
-                u.getActivo()
+                u.getActivo(),
+                modulos
         );
     }
 

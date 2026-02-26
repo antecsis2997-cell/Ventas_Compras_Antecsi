@@ -1,6 +1,7 @@
 package com.antecsis.dto.usuario;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,4 +22,5 @@ public class UsuarioResponseDTO {
     private String sedeNombre;
     private String rolNombre;
     private Boolean activo;
+    private Set<String> modulos;
 }

@@ -1,5 +1,7 @@
 package com.antecsis.dto.login;
 
+import java.util.Set;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,4 +24,6 @@ public class MeResponseDTO {
     private Long sedeId;
     @Schema(description = "Nombre de la sede")
     private String sedeNombre;
+    @Schema(description = "Códigos de módulos a los que tiene acceso el usuario")
+    private Set<String> modulos;
 }

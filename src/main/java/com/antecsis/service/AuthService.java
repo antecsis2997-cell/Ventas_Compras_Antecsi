@@ -1,11 +1,16 @@
 package com.antecsis.service;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.antecsis.dto.login.MeResponseDTO;
+import com.antecsis.entity.Modulo;
 import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.UsuarioRepository;
@@ -26,12 +31,12 @@ public class AuthService {
         Usuario user = usuarioRepo.findByUsername(username)
             .orElseThrow(() -> new BusinessException("Usuario no existe"));
 
-        if (!user.getActivo()) {
-            throw new BusinessException("Usuario desactivado");
-        }
-
         if (!encoder.matches(password, user.getPassword())) {
             throw new BusinessException("Credenciales inválidas");
+        }
+
+        if (!user.getActivo()) {
+            throw new BusinessException("Usuario desactivado");
         }
 
         log.info("Login exitoso para usuario: {}", username);
@@ -42,6 +47,7 @@ public class AuthService {
         );
     }
 
+    @Transactional(readOnly = true)
     public MeResponseDTO getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
@@ -52,6 +58,17 @@ public class AuthService {
         Long sedeId = user.getSede() != null ? user.getSede().getId() : null;
         String sedeNombre = user.getSede() != null ? user.getSede().getNombreSector() : null;
         String rolNombre = user.getRol() != null ? user.getRol().getNombre() : null;
-        return new MeResponseDTO(user.getUsername(), user.getNombre(), user.getApellido(), rolNombre, sedeId, sedeNombre);
+
+        Set<String> modulos;
+        if ("SUPERUSUARIO".equals(rolNombre)) {
+            modulos = Set.of("*");
+        } else {
+            modulos = user.getModulos().stream()
+                    .map(Modulo::getCodigo)
+                    .collect(Collectors.toSet());
+        }
+
+        return new MeResponseDTO(user.getUsername(), user.getNombre(), user.getApellido(),
+                rolNombre, sedeId, sedeNombre, modulos);
     }
 }
