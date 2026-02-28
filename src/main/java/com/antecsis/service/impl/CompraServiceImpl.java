@@ -6,7 +6,9 @@ import com.antecsis.dto.compra.CompraResponseDTO;
 import com.antecsis.entity.*;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.*;
+import com.antecsis.entity.TipoMovimiento;
 import com.antecsis.service.CompraService;
+import com.antecsis.service.InventarioService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class CompraServiceImpl implements CompraService {
     private final ProveedorRepository proveedorRepo;
     private final UsuarioRepository usuarioRepo;
     private final MetodoPagoRepository metodoPagoRepo;
+    private final InventarioService inventarioService;
 
     @Override
     @Transactional
@@ -40,10 +43,12 @@ public class CompraServiceImpl implements CompraService {
                 .orElseThrow(() -> new BusinessException("Proveedor no existe"));
 
         Usuario usuario = obtenerUsuarioAutenticado();
+        verificarAccesoSector(proveedor.getSector());
 
         Compra compra = new Compra();
         compra.setProveedor(proveedor);
         compra.setUsuario(usuario);
+        compra.setSector(usuario.getSede());
         compra.setFecha(LocalDateTime.now());
         compra.setEstado(EstadoCompra.COMPLETADA);
         compra.setObservaciones(dto.getObservaciones());
@@ -61,9 +66,15 @@ public class CompraServiceImpl implements CompraService {
         for (CompraItemDTO item : dto.getItems()) {
             Producto producto = productoRepo.findById(item.getProductoId())
                     .orElseThrow(() -> new BusinessException("Producto no existe: ID " + item.getProductoId()));
+            verificarAccesoSector(producto.getSector());
 
-            producto.setStock(producto.getStock() + item.getCantidad());
+            int stockAnterior = producto.getStock();
+            producto.setStock(stockAnterior + item.getCantidad());
             productoRepo.save(producto);
+
+            inventarioService.registrarMovimiento(producto, TipoMovimiento.COMPRA,
+                    item.getCantidad(), stockAnterior, producto.getStock(),
+                    "Compra", null, usuario, usuario.getSede());
 
             CompraDetalle det = new CompraDetalle();
             det.setCompra(compra);
@@ -88,7 +99,11 @@ public class CompraServiceImpl implements CompraService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CompraResponseDTO> listar(Pageable pageable) {
+    public Page<CompraResponseDTO> listar(Pageable pageable, Long sectorId) {
+        Long effectiveSectorId = resolverSectorId(sectorId);
+        if (effectiveSectorId != null) {
+            return compraRepo.findBySectorId(effectiveSectorId, pageable).map(this::toResponseDTO);
+        }
         return compraRepo.findAll(pageable).map(this::toResponseDTO);
     }
 
@@ -97,6 +112,7 @@ public class CompraServiceImpl implements CompraService {
     public CompraResponseDTO obtenerPorId(Long id) {
         Compra c = compraRepo.findById(id)
                 .orElseThrow(() -> new BusinessException("Compra no existe"));
+        verificarAccesoSector(c.getSector());
         return toResponseDTO(c);
     }
 
@@ -105,28 +121,58 @@ public class CompraServiceImpl implements CompraService {
     public CompraResponseDTO anular(Long id) {
         Compra compra = compraRepo.findById(id)
                 .orElseThrow(() -> new BusinessException("Compra no existe"));
+        verificarAccesoSector(compra.getSector());
 
         if (compra.getEstado() == EstadoCompra.ANULADA) {
             throw new BusinessException("La compra ya está anulada");
         }
 
-        // Revertir stock
+        Usuario usuario = obtenerUsuarioAutenticado();
         for (CompraDetalle detalle : compra.getDetalles()) {
             Producto producto = detalle.getProducto();
-            int nuevoStock = producto.getStock() - detalle.getCantidad();
+            int stockAnterior = producto.getStock();
+            int nuevoStock = stockAnterior - detalle.getCantidad();
             if (nuevoStock < 0) {
                 throw new BusinessException("No se puede anular: el producto '"
                         + producto.getNombre() + "' ya vendió unidades del stock ingresado");
             }
             producto.setStock(nuevoStock);
             productoRepo.save(producto);
+
+            inventarioService.registrarMovimiento(producto, TipoMovimiento.ANULACION_COMPRA,
+                    detalle.getCantidad(), stockAnterior, nuevoStock,
+                    "Anulación compra #" + id, id, usuario, compra.getSector());
         }
 
         compra.setEstado(EstadoCompra.ANULADA);
         Compra guardada = compraRepo.save(compra);
 
-        log.info("Compra #{} anulada por {}", id, obtenerUsuarioAutenticado().getUsername());
+        log.info("Compra #{} anulada por {}", id, usuario.getUsername());
         return toResponseDTO(guardada);
+    }
+
+    private void verificarAccesoSector(Sector sectorEntidad) {
+        Long sectorIdUsuario = obtenerSectorIdAutenticado();
+        if (sectorIdUsuario != null && sectorEntidad != null
+                && !sectorIdUsuario.equals(sectorEntidad.getId())) {
+            throw new BusinessException("No tiene acceso a este recurso");
+        }
+    }
+
+    private Long resolverSectorId(Long sectorIdParam) {
+        Long sectorIdUsuario = obtenerSectorIdAutenticado();
+        if (sectorIdParam != null) {
+            if (sectorIdUsuario != null && !sectorIdUsuario.equals(sectorIdParam)) {
+                throw new BusinessException("No tiene acceso a este sector");
+            }
+            return sectorIdParam;
+        }
+        return sectorIdUsuario;
+    }
+
+    private Long obtenerSectorIdAutenticado() {
+        Usuario usuario = obtenerUsuarioAutenticado();
+        return usuario.getSede() != null ? usuario.getSede().getId() : null;
     }
 
     private Usuario obtenerUsuarioAutenticado() {
@@ -141,6 +187,8 @@ public class CompraServiceImpl implements CompraService {
                 c.getProveedor().getId(),
                 c.getProveedor().getNombre(),
                 c.getUsuario().getUsername(),
+                c.getSector() != null ? c.getSector().getId() : null,
+                c.getSector() != null ? c.getSector().getNombreSector() : null,
                 c.getMetodoPago() != null ? c.getMetodoPago().getNombre() : null,
                 c.getFecha(),
                 c.getTotal(),

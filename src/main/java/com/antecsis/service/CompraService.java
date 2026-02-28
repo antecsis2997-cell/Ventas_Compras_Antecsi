@@ -8,7 +8,7 @@ import com.antecsis.dto.compra.CompraResponseDTO;
 
 public interface CompraService {
     CompraResponseDTO crear(CompraRequestDTO dto);
-    Page<CompraResponseDTO> listar(Pageable pageable);
+    Page<CompraResponseDTO> listar(Pageable pageable, Long sectorId);
     CompraResponseDTO obtenerPorId(Long id);
     CompraResponseDTO anular(Long id);
 }

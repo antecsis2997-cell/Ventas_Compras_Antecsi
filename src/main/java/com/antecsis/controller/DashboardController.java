@@ -26,39 +26,44 @@ import java.time.LocalDate;
 public class DashboardController {
     private final DashboardService service;
 
-    @Operation(summary = "Ventas del día", description = "Total de ventas y monto para una fecha (formato yyyy-MM-dd).")
+    @Operation(summary = "Ventas del día")
     @GetMapping("/ventas-dia")
     public ResponseEntity<DashboardVentasDTO> ventasDia(
-            @Parameter(description = "Fecha en formato yyyy-MM-dd") @RequestParam String fecha) {
-        return ResponseEntity.ok(service.ventasPorDia(LocalDate.parse(fecha)));
+            @Parameter(description = "Fecha en formato yyyy-MM-dd") @RequestParam String fecha,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.ventasPorDia(LocalDate.parse(fecha), sectorId));
     }
 
-    @Operation(summary = "Ventas del mes", description = "Total de ventas y monto para un año y mes.")
+    @Operation(summary = "Ventas del mes")
     @GetMapping("/ventas-mes")
     public ResponseEntity<DashboardVentasDTO> ventasMes(
             @Parameter(description = "Año (ej. 2026)") @RequestParam int year,
-            @Parameter(description = "Mes (1-12)") @RequestParam int month) {
-        return ResponseEntity.ok(service.ventasPorMes(year, month));
+            @Parameter(description = "Mes (1-12)") @RequestParam int month,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.ventasPorMes(year, month, sectorId));
     }
 
-    @Operation(summary = "Ventas del año", description = "Total de ventas y monto para un año.")
+    @Operation(summary = "Ventas del año")
     @GetMapping("/ventas-anio")
     public ResponseEntity<DashboardVentasDTO> ventasAnio(
-            @Parameter(description = "Año (ej. 2026)") @RequestParam int year) {
-        return ResponseEntity.ok(service.ventasPorAnio(year));
+            @Parameter(description = "Año (ej. 2026)") @RequestParam int year,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.ventasPorAnio(year, sectorId));
     }
 
-    @Operation(summary = "Producto más vendido", description = "Producto con mayor cantidad vendida (requiere ventas registradas).")
+    @Operation(summary = "Producto más vendido")
     @GetMapping("/producto-mas-vendido")
-    public ResponseEntity<ProductoMasVendidoDTO> productoMasVendido() {
-        return ResponseEntity.ok(service.productoMasVendido());
+    public ResponseEntity<ProductoMasVendidoDTO> productoMasVendido(
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.productoMasVendido(sectorId));
     }
 
-    @Operation(summary = "Pedidos facturados y anulados", description = "Cantidad de pedidos con estado COMPLETADA (facturados) y ANULADA (anulados) en el mes. Dashboard Administración.")
+    @Operation(summary = "Pedidos facturados y anulados en el mes")
     @GetMapping("/pedidos-estado")
     public ResponseEntity<DashboardPedidosEstadoDTO> pedidosEstado(
             @Parameter(description = "Año") @RequestParam int year,
-            @Parameter(description = "Mes (1-12)") @RequestParam int month) {
-        return ResponseEntity.ok(service.pedidosFacturadosYAnuladosPorMes(year, month));
+            @Parameter(description = "Mes (1-12)") @RequestParam int month,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.pedidosFacturadosYAnuladosPorMes(year, month, sectorId));
     }
 }

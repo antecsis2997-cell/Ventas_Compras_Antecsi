@@ -12,5 +12,9 @@ public interface HistorialPedidoRepository extends JpaRepository<HistorialPedido
 
     List<HistorialPedido> findByFechaBetweenOrderByFechaDesc(LocalDateTime inicio, LocalDateTime fin);
 
+    List<HistorialPedido> findByFechaBetweenAndSectorIdOrderByFechaDesc(LocalDateTime inicio, LocalDateTime fin, Long sectorId);
+
     Page<HistorialPedido> findByOrderByFechaDesc(Pageable pageable);
+
+    Page<HistorialPedido> findBySectorIdOrderByFechaDesc(Long sectorId, Pageable pageable);
 }

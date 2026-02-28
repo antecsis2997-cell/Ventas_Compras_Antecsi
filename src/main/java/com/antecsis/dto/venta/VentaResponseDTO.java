@@ -15,6 +15,8 @@ public class VentaResponseDTO {
     private Long clienteId;
     private String clienteNombre;
     private String usuarioNombre;
+    private Long sectorId;
+    private String sectorNombre;
     private String metodoPagoNombre;
     private LocalDateTime fecha;
     private BigDecimal total;

@@ -30,6 +30,10 @@ public class Venta {
     private Usuario usuario;
 
     @ManyToOne
+    @JoinColumn(name = "sector_id")
+    private Sector sector;
+
+    @ManyToOne
     @JoinColumn(name = "metodo_pago_id")
     private MetodoPago metodoPago;
 

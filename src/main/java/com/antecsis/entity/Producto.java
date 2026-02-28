@@ -26,7 +26,6 @@ public class Producto {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(unique = true)
 	private String codigo;
 
 	@Column(nullable = false, length = 50)
@@ -48,6 +47,10 @@ public class Producto {
 	@JoinColumn(name = "categoria_id")
 	private Categoria categoria;
 
+	@ManyToOne
+	@JoinColumn(name = "sector_id")
+	private Sector sector;
+
 	/** Unidad del producto: UND, KG, MG, GRAMOS (documento INSUMOS). */
 	@Column(name = "unidad_medida", length = 20)
 	private String unidadMedida;
@@ -55,6 +58,10 @@ public class Producto {
 	/** Ruta o URL de imagen (PNG, JPG). */
 	@Column(name = "imagen_url", length = 500)
 	private String imagenUrl;
+
+	/** PEN = Soles, USD = Dólares. */
+	@Column(length = 3, nullable = false)
+	private String moneda = "PEN";
 
 	/** Umbral para alerta de stock bajo (pop-up). */
 	@Column(name = "stock_minimo_alerta")

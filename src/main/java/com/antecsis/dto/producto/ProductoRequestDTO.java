@@ -40,6 +40,9 @@ public class ProductoRequestDTO {
 
     private Long categoriaId;
 
+    /** PEN o USD. */
+    private String moneda;
+
     /** Unidad: UND, KG, MG, GRAMOS (documento INSUMOS). */
     private String unidadMedida;
     private String imagenUrl;

@@ -39,11 +39,13 @@ public class VentaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(dto));
     }
 
-    @Operation(summary = "Listar ventas", description = "Listado paginado. Requiere CAJERO, ADMIN o SUPERUSUARIO.")
+    @Operation(summary = "Listar ventas", description = "Listado paginado. Opcionalmente filtra por sector. Requiere CAJERO, ADMIN o SUPERUSUARIO.")
     @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping
-    public ResponseEntity<Page<VentaResponseDTO>> listar(Pageable pageable) {
-        return ResponseEntity.ok(service.listar(pageable));
+    public ResponseEntity<Page<VentaResponseDTO>> listar(
+            Pageable pageable,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.listar(pageable, sectorId));
     }
 
     @Operation(summary = "Obtener venta por ID")

@@ -20,7 +20,7 @@ public class Cliente {
     @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -28,10 +28,13 @@ public class Cliente {
 
     private String tipoDocumento;
 
-    @Column(unique = true)
     private String documento;
 
     private String direccion;
+
+    @ManyToOne
+    @JoinColumn(name = "sector_id")
+    private Sector sector;
 
     private Boolean activo = true;
 }

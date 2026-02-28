@@ -27,13 +27,14 @@ public class ReporteController {
 
     private final ReporteService reporteService;
 
-    @Operation(summary = "Exportar ventas a Excel", description = "Descarga un archivo .xlsx con las ventas entre fechaInicio y fechaFin.")
+    @Operation(summary = "Exportar ventas a Excel", description = "Descarga un archivo .xlsx con las ventas entre fechaInicio y fechaFin. Opcionalmente filtra por sector.")
     @GetMapping("/ventas-excel")
     public ResponseEntity<byte[]> ventasExcel(
             @Parameter(description = "Fecha inicio (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
-            @Parameter(description = "Fecha fin (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+            @Parameter(description = "Fecha fin (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @Parameter(description = "ID del sector (opcional, si no se envía retorna todas)") @RequestParam(required = false) Long sectorId) {
         try {
-            byte[] bytes = reporteService.exportarVentasExcel(fechaInicio, fechaFin);
+            byte[] bytes = reporteService.exportarVentasExcel(fechaInicio, fechaFin, sectorId);
             String filename = "ventas_" + fechaInicio + "_" + fechaFin + ".xlsx";
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
@@ -46,13 +47,14 @@ public class ReporteController {
         }
     }
 
-    @Operation(summary = "Exportar ventas a PDF", description = "Descarga un archivo PDF con las ventas entre fechaInicio y fechaFin.")
+    @Operation(summary = "Exportar ventas a PDF", description = "Descarga un archivo PDF con las ventas entre fechaInicio y fechaFin. Opcionalmente filtra por sector.")
     @GetMapping("/ventas-pdf")
     public ResponseEntity<byte[]> ventasPdf(
             @Parameter(description = "Fecha inicio (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
-            @Parameter(description = "Fecha fin (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+            @Parameter(description = "Fecha fin (yyyy-MM-dd)") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @Parameter(description = "ID del sector (opcional, si no se envía retorna todas)") @RequestParam(required = false) Long sectorId) {
         try {
-            byte[] bytes = reporteService.exportarVentasPdf(fechaInicio, fechaFin);
+            byte[] bytes = reporteService.exportarVentasPdf(fechaInicio, fechaFin, sectorId);
             String filename = "ventas_" + fechaInicio + "_" + fechaFin + ".pdf";
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")

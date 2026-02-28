@@ -7,11 +7,10 @@ import com.antecsis.dto.producto.ProductoMasVendidoDTO;
 import java.time.LocalDate;
 
 public interface DashboardService {
-    DashboardVentasDTO ventasPorDia(LocalDate dia);
-    DashboardVentasDTO ventasPorMes(int year, int month);
-    DashboardVentasDTO ventasPorAnio(int year);
-    ProductoMasVendidoDTO productoMasVendido();
+    DashboardVentasDTO ventasPorDia(LocalDate dia, Long sectorId);
+    DashboardVentasDTO ventasPorMes(int year, int month, Long sectorId);
+    DashboardVentasDTO ventasPorAnio(int year, Long sectorId);
+    ProductoMasVendidoDTO productoMasVendido(Long sectorId);
 
-    /** Pedidos facturados (COMPLETADA) y anulados (ANULADA) en el mes. */
-    DashboardPedidosEstadoDTO pedidosFacturadosYAnuladosPorMes(int year, int month);
+    DashboardPedidosEstadoDTO pedidosFacturadosYAnuladosPorMes(int year, int month, Long sectorId);
 }

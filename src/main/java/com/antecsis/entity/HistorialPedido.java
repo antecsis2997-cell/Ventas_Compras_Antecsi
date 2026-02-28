@@ -42,6 +42,10 @@ public class HistorialPedido {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sector_id")
+    private Sector sector;
+
     @Column(name = "nombre_producto", nullable = false, length = 200)
     private String nombreProducto;
 

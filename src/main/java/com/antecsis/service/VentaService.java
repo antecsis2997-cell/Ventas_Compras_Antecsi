@@ -8,7 +8,7 @@ import com.antecsis.dto.venta.VentaResponseDTO;
 
 public interface VentaService {
     VentaResponseDTO crear(VentaRequestDTO dto);
-    Page<VentaResponseDTO> listar(Pageable pageable);
+    Page<VentaResponseDTO> listar(Pageable pageable, Long sectorId);
     VentaResponseDTO obtenerPorId(Long id);
     VentaResponseDTO anular(Long id);
 }
