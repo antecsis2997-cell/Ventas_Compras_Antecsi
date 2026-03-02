@@ -53,6 +53,8 @@ public class VentaServiceImpl implements VentaService {
         venta.setFecha(LocalDateTime.now());
         venta.setEstado(EstadoVenta.COMPLETADA);
         venta.setObservaciones(dto.getObservaciones());
+        venta.setMoneda(dto.getMoneda() != null ? dto.getMoneda() : "PEN");
+        venta.setConCuotas(dto.getConCuotas());
         if (dto.getTipoDocumento() != null && !dto.getTipoDocumento().isBlank()) {
             try {
                 venta.setTipoDocumento(TipoDocumentoVenta.valueOf(dto.getTipoDocumento().toUpperCase().trim()));
@@ -93,9 +95,14 @@ public class VentaServiceImpl implements VentaService {
             det.setVenta(venta);
             det.setProducto(producto);
             det.setCantidad(item.getCantidad());
-            det.setPrecioUnitario(producto.getPrecio());
+            
+            // Usar precio personalizado si viene en el DTO, sino usar el del catálogo
+            BigDecimal precioUnitario = item.getPrecioUnitario() != null 
+                    ? item.getPrecioUnitario() 
+                    : producto.getPrecio();
+            det.setPrecioUnitario(precioUnitario);
 
-            BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad()));
+            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.getCantidad()));
             total = total.add(subtotal);
             detalles.add(det);
         }
@@ -205,6 +212,15 @@ public class VentaServiceImpl implements VentaService {
     }
 
     private VentaResponseDTO toResponseDTO(Venta v) {
+        List<VentaResponseDTO.VentaItemDTO> items = v.getDetalles().stream()
+                .map(d -> new VentaResponseDTO.VentaItemDTO(
+                        d.getProducto().getNombre(),
+                        d.getCantidad(),
+                        d.getPrecioUnitario(),
+                        d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad()))
+                ))
+                .toList();
+
         return new VentaResponseDTO(
                 v.getId(),
                 v.getCliente().getId(),
@@ -218,7 +234,10 @@ public class VentaServiceImpl implements VentaService {
                 v.getEstado().name(),
                 v.getTipoDocumento() != null ? v.getTipoDocumento().name() : null,
                 v.getNumeroDocumento(),
-                v.getObservaciones()
+                v.getObservaciones(),
+                v.getMoneda(),
+                v.getConCuotas(),
+                items
         );
     }
 }

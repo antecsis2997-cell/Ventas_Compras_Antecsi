@@ -32,6 +32,21 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public ProductoResponseDTO crear(ProductoRequestDTO dto) {
         Usuario usuario = obtenerUsuarioAutenticado();
+        Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
+
+        // Validar duplicados por nombre dentro del mismo sector
+        if (sectorId != null && dto.getNombre() != null) {
+            if (repository.existsByNombreAndSectorId(dto.getNombre(), sectorId)) {
+                throw new BusinessException("Ya existe un producto con ese nombre en tu bodega");
+            }
+        }
+
+        // Validar duplicados por código dentro del mismo sector
+        if (sectorId != null && dto.getCodigo() != null && !dto.getCodigo().isBlank()) {
+            if (repository.existsByCodigoAndSectorId(dto.getCodigo(), sectorId)) {
+                throw new BusinessException("Ya existe un producto con ese código en tu bodega");
+            }
+        }
 
         Producto producto = new Producto();
         producto.setCodigo(dto.getCodigo());
@@ -44,6 +59,9 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setUnidadMedida(dto.getUnidadMedida());
         producto.setImagenUrl(dto.getImagenUrl());
         producto.setStockMinimoAlerta(dto.getStockMinimoAlerta());
+        producto.setTipo(dto.getTipo());
+        producto.setMarca(dto.getMarca());
+        producto.setCantidad(dto.getCantidad());
         producto.setSector(usuario.getSede());
         producto.setActivo(true);
 
@@ -84,6 +102,29 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new BusinessException("Producto no existe"));
         verificarAccesoSector(producto.getSector());
 
+        Usuario usuario = obtenerUsuarioAutenticado();
+        Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
+
+        // Validar duplicados por nombre (excluyendo el producto actual)
+        if (sectorId != null && dto.getNombre() != null) {
+            boolean existeOtroConMismoNombre = repository.findBySectorId(sectorId, Pageable.unpaged())
+                .stream()
+                .anyMatch(p -> !p.getId().equals(id) && p.getNombre().equals(dto.getNombre()));
+            if (existeOtroConMismoNombre) {
+                throw new BusinessException("Ya existe otro producto con ese nombre en tu bodega");
+            }
+        }
+
+        // Validar duplicados por código (excluyendo el producto actual)
+        if (sectorId != null && dto.getCodigo() != null && !dto.getCodigo().isBlank()) {
+            boolean existeOtroConMismoCodigo = repository.findBySectorId(sectorId, Pageable.unpaged())
+                .stream()
+                .anyMatch(p -> !p.getId().equals(id) && dto.getCodigo().equals(p.getCodigo()));
+            if (existeOtroConMismoCodigo) {
+                throw new BusinessException("Ya existe otro producto con ese código en tu bodega");
+            }
+        }
+
         producto.setCodigo(dto.getCodigo());
         producto.setNombre(dto.getNombre());
         producto.setDescripcion(dto.getDescripcion());
@@ -94,6 +135,9 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setUnidadMedida(dto.getUnidadMedida());
         producto.setImagenUrl(dto.getImagenUrl());
         producto.setStockMinimoAlerta(dto.getStockMinimoAlerta());
+        producto.setTipo(dto.getTipo());
+        producto.setMarca(dto.getMarca());
+        producto.setCantidad(dto.getCantidad());
 
         if (dto.getCategoriaId() != null) {
             Categoria cat = categoriaRepository.findById(dto.getCategoriaId())
@@ -152,6 +196,9 @@ public class ProductoServiceImpl implements ProductoService {
                 p.getUnidadMedida(),
                 p.getImagenUrl(),
                 p.getStockMinimoAlerta(),
+                p.getTipo(),
+                p.getMarca(),
+                p.getCantidad(),
                 p.getActivo()
         );
     }

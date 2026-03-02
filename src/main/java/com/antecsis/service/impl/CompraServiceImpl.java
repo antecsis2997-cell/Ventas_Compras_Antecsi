@@ -182,6 +182,15 @@ public class CompraServiceImpl implements CompraService {
     }
 
     private CompraResponseDTO toResponseDTO(Compra c) {
+        List<CompraResponseDTO.CompraItemDTO> items = c.getDetalles().stream()
+                .map(d -> new CompraResponseDTO.CompraItemDTO(
+                        d.getProducto().getNombre(),
+                        d.getCantidad(),
+                        d.getPrecioUnitario(),
+                        d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad()))
+                ))
+                .toList();
+
         return new CompraResponseDTO(
                 c.getId(),
                 c.getProveedor().getId(),
@@ -194,7 +203,8 @@ public class CompraServiceImpl implements CompraService {
                 c.getTotal(),
                 c.getEstado().name(),
                 c.getObservaciones(),
-                c.getNumeroDocumento()
+                c.getNumeroDocumento(),
+                items
         );
     }
 }

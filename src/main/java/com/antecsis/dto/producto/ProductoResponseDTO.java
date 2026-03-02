@@ -23,5 +23,8 @@ public class ProductoResponseDTO {
 	private String unidadMedida;
 	private String imagenUrl;
 	private Integer stockMinimoAlerta;
+	private String tipo;
+	private String marca;
+	private BigDecimal cantidad;
 	private Boolean activo;
 }

@@ -21,6 +21,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     Page<Cliente> findBySectorId(Long sectorId, Pageable pageable);
 
+    boolean existsByDocumentoAndSectorId(String documento, Long sectorId);
+
     @Query("SELECT c FROM Cliente c WHERE c.sector.id = :sectorId AND c.activo = true AND (" +
            "LOWER(c.nombre) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "c.documento LIKE CONCAT('%', :q, '%'))")

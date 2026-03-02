@@ -57,6 +57,13 @@ public class Venta {
 
     private String observaciones;
 
+    @Column(length = 3, nullable = false)
+    private String moneda = "PEN";
+
+    /** Indica si el pago con tarjeta es con cuotas. */
+    @Column(name = "con_cuotas")
+    private Boolean conCuotas;
+
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     private List<VentaDetalle> detalles;
 }

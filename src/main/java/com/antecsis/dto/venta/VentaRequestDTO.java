@@ -31,6 +31,12 @@ public class VentaRequestDTO {
 	@Schema(description = "Observaciones")
 	private String observaciones;
 
+	@Schema(description = "Moneda: PEN o USD", allowableValues = { "PEN", "USD" })
+	private String moneda;
+
+	@Schema(description = "Si el pago con tarjeta es con cuotas (true) o sin cuotas (false)")
+	private Boolean conCuotas;
+
 	@Schema(description = "Lista de items: productoId y cantidad. Al menos uno requerido.", requiredMode = Schema.RequiredMode.REQUIRED)
 	@NotEmpty(message = "Debe incluir al menos un item")
 	private List<@Valid VentaItemDTO> items;

@@ -67,5 +67,17 @@ public class Producto {
 	@Column(name = "stock_minimo_alerta")
 	private Integer stockMinimoAlerta;
 
+	/** Tipo de producto. */
+	@Column(length = 100)
+	private String tipo;
+
+	/** Marca del producto. */
+	@Column(length = 100)
+	private String marca;
+
+	/** Cantidad numérica del producto. */
+	@Column(precision = 12, scale = 2)
+	private BigDecimal cantidad;
+
 	private Boolean activo = true;
 }

@@ -39,6 +39,8 @@ public class CompraController {
         return ResponseEntity.ok(service.listar(pageable, sectorId));
     }
 
+    @Operation(summary = "Obtener compra por ID")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping("/{id}")
     public ResponseEntity<CompraResponseDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));

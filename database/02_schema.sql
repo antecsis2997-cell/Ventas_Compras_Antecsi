@@ -63,6 +63,9 @@ CREATE TABLE IF NOT EXISTS public.productos (
     imagen_url VARCHAR(500),
     moneda VARCHAR(3) NOT NULL DEFAULT 'PEN',
     stock_minimo_alerta INTEGER,
+    tipo VARCHAR(100),
+    marca VARCHAR(100),
+    cantidad DECIMAL(12, 2),
     activo BOOLEAN DEFAULT true
 );
 
@@ -74,6 +77,19 @@ CREATE INDEX IF NOT EXISTS idx_productos_codigo ON public.productos(codigo);
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='productos' AND column_name='moneda') THEN
     ALTER TABLE public.productos ADD COLUMN moneda VARCHAR(3) NOT NULL DEFAULT 'PEN';
+  END IF;
+END $$;
+
+-- Migración: agregar columnas tipo, marca, cantidad si no existen
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='productos' AND column_name='tipo') THEN
+    ALTER TABLE public.productos ADD COLUMN tipo VARCHAR(100);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='productos' AND column_name='marca') THEN
+    ALTER TABLE public.productos ADD COLUMN marca VARCHAR(100);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='productos' AND column_name='cantidad') THEN
+    ALTER TABLE public.productos ADD COLUMN cantidad DECIMAL(12, 2);
   END IF;
 END $$;
 
@@ -125,8 +141,24 @@ CREATE TABLE IF NOT EXISTS public.ventas (
     estado VARCHAR(50) NOT NULL DEFAULT 'COMPLETADA',
     tipo_documento VARCHAR(50),
     numero_documento VARCHAR(50),
-    observaciones VARCHAR(500)
+    observaciones VARCHAR(500),
+    moneda VARCHAR(3) NOT NULL DEFAULT 'PEN',
+    con_cuotas BOOLEAN
 );
+
+-- Migración: agregar columna moneda a ventas si no existe
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='moneda') THEN
+    ALTER TABLE public.ventas ADD COLUMN moneda VARCHAR(3) NOT NULL DEFAULT 'PEN';
+  END IF;
+END $$;
+
+-- Migración: agregar columna con_cuotas si no existe
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='con_cuotas') THEN
+    ALTER TABLE public.ventas ADD COLUMN con_cuotas BOOLEAN;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_ventas_cliente ON public.ventas(cliente_id);
 CREATE INDEX IF NOT EXISTS idx_ventas_usuario ON public.ventas(usuario_id);

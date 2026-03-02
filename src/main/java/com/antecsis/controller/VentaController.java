@@ -49,6 +49,7 @@ public class VentaController {
     }
 
     @Operation(summary = "Obtener venta por ID")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping("/{id}")
     public ResponseEntity<VentaResponseDTO> obtener(@Parameter(description = "ID de la venta") @PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));

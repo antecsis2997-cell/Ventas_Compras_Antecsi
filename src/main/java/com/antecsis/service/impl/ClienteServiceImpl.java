@@ -31,6 +31,7 @@ public class ClienteServiceImpl implements ClienteService {
         Usuario usuario = obtenerUsuarioAutenticado();
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
+        // Validar email duplicado por sector
         if (sectorId != null) {
             repository.findByEmailAndSectorId(dto.getEmail(), sectorId).ifPresent(c -> {
                 throw new BusinessException("El email ya está registrado en tu bodega");
@@ -39,6 +40,13 @@ public class ClienteServiceImpl implements ClienteService {
             repository.findByEmail(dto.getEmail()).ifPresent(c -> {
                 throw new BusinessException("El email ya está registrado");
             });
+        }
+
+        // Validar documento duplicado por sector
+        if (sectorId != null && dto.getDocumento() != null && !dto.getDocumento().isBlank()) {
+            if (repository.existsByDocumentoAndSectorId(dto.getDocumento(), sectorId)) {
+                throw new BusinessException("El documento ya está registrado en tu bodega");
+            }
         }
 
         Cliente cliente = new Cliente();
@@ -96,6 +104,15 @@ public class ClienteServiceImpl implements ClienteService {
                     throw new BusinessException("El email ya está registrado por otro cliente en tu bodega");
                 }
             });
+            // Validar documento duplicado
+            if (dto.getDocumento() != null && !dto.getDocumento().isBlank()) {
+                boolean existeOtroConMismoDocumento = repository.findBySectorId(sectorId, Pageable.unpaged())
+                    .stream()
+                    .anyMatch(c -> !c.getId().equals(id) && dto.getDocumento().equals(c.getDocumento()));
+                if (existeOtroConMismoDocumento) {
+                    throw new BusinessException("El documento ya está registrado por otro cliente en tu bodega");
+                }
+            }
         } else {
             repository.findByEmail(dto.getEmail()).ifPresent(existing -> {
                 if (!existing.getId().equals(id)) {

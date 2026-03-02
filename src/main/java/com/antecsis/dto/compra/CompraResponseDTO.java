@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -23,4 +24,15 @@ public class CompraResponseDTO {
     private String estado;
     private String observaciones;
     private String numeroDocumento;
+    private List<CompraItemDTO> items;
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class CompraItemDTO {
+        private String productoNombre;
+        private Integer cantidad;
+        private BigDecimal precioUnitario;
+        private BigDecimal subtotal;
+    }
 }
