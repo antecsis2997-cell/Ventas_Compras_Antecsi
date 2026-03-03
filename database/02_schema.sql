@@ -160,6 +160,33 @@ DO $$ BEGIN
   END IF;
 END $$;
 
+-- Migración: agregar columnas de delivery
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='requiere_delivery') THEN
+    ALTER TABLE public.ventas ADD COLUMN requiere_delivery BOOLEAN DEFAULT false;
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='tipo_entrega') THEN
+    ALTER TABLE public.ventas ADD COLUMN tipo_entrega VARCHAR(20);
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='direccion_entrega') THEN
+    ALTER TABLE public.ventas ADD COLUMN direccion_entrega VARCHAR(500);
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='estado_entrega') THEN
+    ALTER TABLE public.ventas ADD COLUMN estado_entrega VARCHAR(20);
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='usuario_entrega_id') THEN
+    ALTER TABLE public.ventas ADD COLUMN usuario_entrega_id BIGINT REFERENCES public.usuarios(id);
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_ventas_cliente ON public.ventas(cliente_id);
 CREATE INDEX IF NOT EXISTS idx_ventas_usuario ON public.ventas(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_ventas_sector ON public.ventas(sector_id);

@@ -37,6 +37,15 @@ public class VentaRequestDTO {
 	@Schema(description = "Si el pago con tarjeta es con cuotas (true) o sin cuotas (false)")
 	private Boolean conCuotas;
 
+	@Schema(description = "Si requiere delivery. Si true, venta queda PENDIENTE hasta que Logística marque entregado.")
+	private Boolean requiereDelivery;
+
+	@Schema(description = "Tipo de entrega: INMEDIATA o PROGRAMADA_3_5 (3 a 5 días)", allowableValues = { "INMEDIATA", "PROGRAMADA_3_5" })
+	private String tipoEntrega;
+
+	@Schema(description = "Dirección de entrega (obligatorio cuando tipoEntrega es INMEDIATA)")
+	private String direccionEntrega;
+
 	@Schema(description = "Lista de items: productoId y cantidad. Al menos uno requerido.", requiredMode = Schema.RequiredMode.REQUIRED)
 	@NotEmpty(message = "Debe incluir al menos un item")
 	private List<@Valid VentaItemDTO> items;

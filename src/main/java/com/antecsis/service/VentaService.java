@@ -11,4 +11,7 @@ public interface VentaService {
     Page<VentaResponseDTO> listar(Pageable pageable, Long sectorId);
     VentaResponseDTO obtenerPorId(Long id);
     VentaResponseDTO anular(Long id);
+
+    Page<VentaResponseDTO> listarEntregasPendientes(Pageable pageable, Long sectorId, String tipoEntrega);
+    VentaResponseDTO marcarEntregado(Long ventaId);
 }

@@ -51,10 +51,35 @@ public class VentaServiceImpl implements VentaService {
         venta.setUsuario(usuario);
         venta.setSector(usuario.getSede());
         venta.setFecha(LocalDateTime.now());
-        venta.setEstado(EstadoVenta.COMPLETADA);
         venta.setObservaciones(dto.getObservaciones());
         venta.setMoneda(dto.getMoneda() != null ? dto.getMoneda() : "PEN");
         venta.setConCuotas(dto.getConCuotas());
+
+        // Delivery: si requiere delivery, venta queda PENDIENTE hasta que Logística marque entregado
+        Boolean requiereDelivery = Boolean.TRUE.equals(dto.getRequiereDelivery());
+        venta.setRequiereDelivery(requiereDelivery);
+        if (requiereDelivery) {
+            venta.setEstado(EstadoVenta.PENDIENTE);
+            venta.setEstadoEntrega(EstadoEntrega.PENDIENTE);
+            if (dto.getTipoEntrega() != null && !dto.getTipoEntrega().isBlank()) {
+                try {
+                    venta.setTipoEntrega(TipoEntrega.valueOf(dto.getTipoEntrega().toUpperCase().trim()));
+                } catch (IllegalArgumentException e) {
+                    throw new BusinessException("Tipo de entrega inválido. Use INMEDIATA o PROGRAMADA_3_5.");
+                }
+            }
+            venta.setDireccionEntrega(dto.getDireccionEntrega());
+            if (venta.getTipoEntrega() == TipoEntrega.INMEDIATA
+                    && (venta.getDireccionEntrega() == null || venta.getDireccionEntrega().isBlank())) {
+                throw new BusinessException("La dirección de entrega es obligatoria cuando el tipo es INMEDIATA.");
+            }
+        } else {
+            venta.setEstado(EstadoVenta.COMPLETADA);
+            venta.setTipoEntrega(null);
+            venta.setDireccionEntrega(null);
+            venta.setEstadoEntrega(null);
+        }
+
         if (dto.getTipoDocumento() != null && !dto.getTipoDocumento().isBlank()) {
             try {
                 venta.setTipoDocumento(TipoDocumentoVenta.valueOf(dto.getTipoDocumento().toUpperCase().trim()));
@@ -181,6 +206,63 @@ public class VentaServiceImpl implements VentaService {
         return toResponseDTO(guardada);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VentaResponseDTO> listarEntregasPendientes(Pageable pageable, Long sectorId, String tipoEntrega) {
+        TipoEntrega tipo = null;
+        if (tipoEntrega != null && !tipoEntrega.isBlank()) {
+            try {
+                tipo = TipoEntrega.valueOf(tipoEntrega.toUpperCase().trim());
+            } catch (IllegalArgumentException ignored) {
+                // Si es inválido, no filtra por tipo
+            }
+        }
+
+        Long effectiveSectorId = resolverSectorId(sectorId);
+
+        if (tipo != null) {
+            if (effectiveSectorId != null) {
+                return ventaRepo.findEntregasConHistorialBySector(
+                        tipo, effectiveSectorId, EstadoVenta.PENDIENTE, EstadoEntrega.ENTREGADO, pageable)
+                        .map(this::toResponseDTO);
+            }
+            return ventaRepo.findEntregasConHistorial(
+                    tipo, EstadoVenta.PENDIENTE, EstadoEntrega.ENTREGADO, pageable)
+                    .map(this::toResponseDTO);
+        }
+
+        if (effectiveSectorId != null) {
+            return ventaRepo.findByRequiereDeliveryTrueAndEstadoAndSectorId(EstadoVenta.PENDIENTE, effectiveSectorId, pageable)
+                    .map(this::toResponseDTO);
+        }
+        return ventaRepo.findByRequiereDeliveryTrueAndEstado(EstadoVenta.PENDIENTE, pageable)
+                .map(this::toResponseDTO);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO marcarEntregado(Long ventaId) {
+        Venta venta = ventaRepo.findById(ventaId)
+                .orElseThrow(() -> new BusinessException("Venta no existe"));
+        verificarAccesoSector(venta.getSector());
+
+        if (!Boolean.TRUE.equals(venta.getRequiereDelivery())) {
+            throw new BusinessException("Esta venta no tiene delivery");
+        }
+        if (venta.getEstado() == EstadoVenta.ANULADA) {
+            throw new BusinessException("No se puede marcar entregada una venta anulada");
+        }
+
+        Usuario usuario = obtenerUsuarioAutenticado();
+        venta.setEstadoEntrega(EstadoEntrega.ENTREGADO);
+        venta.setEstado(EstadoVenta.COMPLETADA);
+        venta.setUsuarioEntrega(usuario);
+        Venta guardada = ventaRepo.save(venta);
+
+        log.info("Entrega de venta #{} marcada como entregada por {}", ventaId, usuario.getUsername());
+        return toResponseDTO(guardada);
+    }
+
     private void verificarAccesoSector(Sector sectorEntidad) {
         Long sectorIdUsuario = obtenerSectorIdAutenticado();
         if (sectorIdUsuario != null && sectorEntidad != null
@@ -237,6 +319,11 @@ public class VentaServiceImpl implements VentaService {
                 v.getObservaciones(),
                 v.getMoneda(),
                 v.getConCuotas(),
+                v.getRequiereDelivery(),
+                v.getTipoEntrega() != null ? v.getTipoEntrega().name() : null,
+                v.getDireccionEntrega(),
+                v.getEstadoEntrega() != null ? v.getEstadoEntrega().name() : null,
+                v.getUsuarioEntrega() != null ? v.getUsuarioEntrega().getUsername() : null,
                 items
         );
     }

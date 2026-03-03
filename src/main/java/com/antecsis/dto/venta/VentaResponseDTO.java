@@ -27,6 +27,11 @@ public class VentaResponseDTO {
     private String observaciones;
     private String moneda;
     private Boolean conCuotas;
+    private Boolean requiereDelivery;
+    private String tipoEntrega;
+    private String direccionEntrega;
+    private String estadoEntrega;
+    private String entregadoPorNombre;
     private List<VentaItemDTO> items;
 
     @Getter

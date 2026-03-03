@@ -87,6 +87,7 @@ public class DataInitializer {
             crearModuloSiNoExiste(moduloRepository, "HISTORIAL_PEDIDOS",    "Historial de Pedidos", "Historial de pedidos realizados",         "history",          13);
             crearModuloSiNoExiste(moduloRepository, "MENSAJES",             "Mensajes",             "Mensajería interna",                      "mail",             14);
             crearModuloSiNoExiste(moduloRepository, "USUARIOS",             "Usuarios",             "Gestión de usuarios y permisos",          "manage_accounts",  15);
+            crearModuloSiNoExiste(moduloRepository, "LOGISTICA_ENTREGAS",   "Entregas y Delivery",  "Gestión de entregas y delivery",           "local_shipping",   16);
         };
     }
 

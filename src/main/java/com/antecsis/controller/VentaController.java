@@ -66,4 +66,21 @@ public class VentaController {
     public ResponseEntity<VentaResponseDTO> anular(@Parameter(description = "ID de la venta") @PathVariable Long id) {
         return ResponseEntity.ok(service.anular(id));
     }
+
+    @Operation(summary = "Listar entregas pendientes", description = "Ventas con delivery pendiente. tipoEntrega: INMEDIATA (Delivery) o PROGRAMADA_3_5 (Entregas).")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @GetMapping("/entregas-pendientes")
+    public ResponseEntity<Page<VentaResponseDTO>> listarEntregasPendientes(
+            Pageable pageable,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId,
+            @Parameter(description = "INMEDIATA=Delivery, PROGRAMADA_3_5=Entregas (opcional)") @RequestParam(name = "tipoEntrega", required = false) String tipoEntrega) {
+        return ResponseEntity.ok(service.listarEntregasPendientes(pageable, sectorId, tipoEntrega));
+    }
+
+    @Operation(summary = "Marcar entrega como entregada", description = "Cuando Logística completa la entrega, la venta pasa a COMPLETADA.")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @PatchMapping("/{id}/marcar-entregado")
+    public ResponseEntity<VentaResponseDTO> marcarEntregado(@Parameter(description = "ID de la venta") @PathVariable Long id) {
+        return ResponseEntity.ok(service.marcarEntregado(id));
+    }
 }
