@@ -23,6 +23,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import com.antecsis.dto.logistica.MetricasEntregasVendedorDTO;
+import com.antecsis.dto.venta.ConfirmacionEntregaRequestDTO;
 
 @Slf4j
 @Service
@@ -65,13 +69,17 @@ public class VentaServiceImpl implements VentaService {
                 try {
                     venta.setTipoEntrega(TipoEntrega.valueOf(dto.getTipoEntrega().toUpperCase().trim()));
                 } catch (IllegalArgumentException e) {
-                    throw new BusinessException("Tipo de entrega inválido. Use INMEDIATA o PROGRAMADA_3_5.");
+                    throw new BusinessException("Tipo de entrega inválido. Use INMEDIATA, PROGRAMADA_3_5 o PROGRAMADA_5_6_MESES.");
                 }
             }
             venta.setDireccionEntrega(dto.getDireccionEntrega());
             if (venta.getTipoEntrega() == TipoEntrega.INMEDIATA
                     && (venta.getDireccionEntrega() == null || venta.getDireccionEntrega().isBlank())) {
                 throw new BusinessException("La dirección de entrega es obligatoria cuando el tipo es INMEDIATA.");
+            }
+            if (venta.getTipoEntrega() == TipoEntrega.PROGRAMADA_5_6_MESES
+                    && (venta.getDireccionEntrega() == null || venta.getDireccionEntrega().isBlank())) {
+                throw new BusinessException("La dirección de entrega es obligatoria para entregas de 5 a 6 meses.");
             }
         } else {
             venta.setEstado(EstadoVenta.COMPLETADA);
@@ -263,6 +271,69 @@ public class VentaServiceImpl implements VentaService {
         return toResponseDTO(guardada);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<MetricasEntregasVendedorDTO> metricasEntregasPorVendedor(Long sectorId) {
+        List<Venta> entregadas = ventaRepo.findByRequiereDeliveryTrueAndEstadoEntrega(EstadoEntrega.ENTREGADO);
+        if (sectorId != null) {
+            entregadas = entregadas.stream()
+                    .filter(v -> v.getSector() != null && sectorId.equals(v.getSector().getId()))
+                    .toList();
+        }
+        Map<Long, List<Venta>> porVendedor = entregadas.stream()
+                .filter(v -> v.getUsuario() != null)
+                .collect(Collectors.groupingBy(v -> v.getUsuario().getId()));
+        return porVendedor.entrySet().stream()
+                .map(e -> {
+                    List<Venta> ventas = e.getValue();
+                    BigDecimal total = ventas.stream()
+                            .map(v -> v.getTotal() != null ? v.getTotal() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    String nombre = ventas.get(0).getUsuario().getUsername();
+                    return new MetricasEntregasVendedorDTO(
+                            nombre,
+                            e.getKey(),
+                            ventas.size(),
+                            total
+                    );
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO solicitarTracking(Long ventaId) {
+        Venta venta = ventaRepo.findById(ventaId)
+                .orElseThrow(() -> new BusinessException("Venta no existe"));
+        verificarAccesoSector(venta.getSector());
+        if (!Boolean.TRUE.equals(venta.getRequiereDelivery())) {
+            throw new BusinessException("Esta venta no tiene delivery");
+        }
+        String codigo = "TRK-" + ventaId + "-" + System.currentTimeMillis();
+        venta.setCodigoTracking(codigo);
+        Venta guardada = ventaRepo.save(venta);
+        log.info("Tracking solicitado para venta #{}: {}", ventaId, codigo);
+        return toResponseDTO(guardada);
+    }
+
+    @Override
+    @Transactional
+    public VentaResponseDTO confirmarEntrega(Long ventaId, ConfirmacionEntregaRequestDTO dto) {
+        Venta venta = ventaRepo.findById(ventaId)
+                .orElseThrow(() -> new BusinessException("Venta no existe"));
+        verificarAccesoSector(venta.getSector());
+        if (!Boolean.TRUE.equals(venta.getRequiereDelivery())) {
+            throw new BusinessException("Esta venta no tiene delivery");
+        }
+        venta.setConfirmacionFirma(dto.getFirmaBase64());
+        venta.setConfirmacionCorreo(dto.getCorreo());
+        venta.setConfirmacionTelefono(dto.getTelefono());
+        venta.setConfirmacionFecha(java.time.LocalDateTime.now());
+        Venta guardada = ventaRepo.save(venta);
+        log.info("Confirmación de entrega registrada para venta #{} - correo: {}", ventaId, dto.getCorreo());
+        return toResponseDTO(guardada);
+    }
+
     private void verificarAccesoSector(Sector sectorEntidad) {
         Long sectorIdUsuario = obtenerSectorIdAutenticado();
         if (sectorIdUsuario != null && sectorEntidad != null
@@ -324,6 +395,10 @@ public class VentaServiceImpl implements VentaService {
                 v.getDireccionEntrega(),
                 v.getEstadoEntrega() != null ? v.getEstadoEntrega().name() : null,
                 v.getUsuarioEntrega() != null ? v.getUsuarioEntrega().getUsername() : null,
+                v.getCodigoTracking(),
+                v.getConfirmacionCorreo(),
+                v.getConfirmacionTelefono(),
+                v.getConfirmacionFecha(),
                 items
         );
     }

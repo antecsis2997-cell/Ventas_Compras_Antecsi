@@ -50,6 +50,16 @@ public class InventarioServiceImpl implements InventarioService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<InventarioResponseDTO> stockBajoPorAlerta(Pageable pageable, Long sectorId) {
+        Long effectiveId = resolverSectorId(sectorId);
+        if (effectiveId != null) {
+            return productoRepo.findByStockBajoPorAlertaAndSectorId(effectiveId, pageable).map(this::toDTO);
+        }
+        return productoRepo.findByStockBajoPorAlerta(pageable).map(this::toDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<MovimientoResponseDTO> listarMovimientos(Pageable pageable, Long productoId) {
         Long sectorId = obtenerSectorIdAutenticado();
         Page<MovimientoInventario> page;

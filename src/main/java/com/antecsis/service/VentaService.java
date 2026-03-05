@@ -14,4 +14,7 @@ public interface VentaService {
 
     Page<VentaResponseDTO> listarEntregasPendientes(Pageable pageable, Long sectorId, String tipoEntrega);
     VentaResponseDTO marcarEntregado(Long ventaId);
+    java.util.List<com.antecsis.dto.logistica.MetricasEntregasVendedorDTO> metricasEntregasPorVendedor(Long sectorId);
+    VentaResponseDTO solicitarTracking(Long ventaId);
+    VentaResponseDTO confirmarEntrega(Long ventaId, com.antecsis.dto.venta.ConfirmacionEntregaRequestDTO dto);
 }

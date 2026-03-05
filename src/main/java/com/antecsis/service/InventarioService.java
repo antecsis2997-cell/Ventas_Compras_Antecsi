@@ -14,6 +14,7 @@ import com.antecsis.entity.Usuario;
 public interface InventarioService {
     Page<InventarioResponseDTO> listarTodo(Pageable pageable, Long sectorId);
     Page<InventarioResponseDTO> stockBajo(Integer limite, Pageable pageable, Long sectorId);
+    Page<InventarioResponseDTO> stockBajoPorAlerta(Pageable pageable, Long sectorId);
     Page<MovimientoResponseDTO> listarMovimientos(Pageable pageable, Long productoId);
     MovimientoResponseDTO ajustarStock(AjusteStockRequestDTO dto);
     void registrarMovimiento(Producto producto, TipoMovimiento tipo, int cantidad,

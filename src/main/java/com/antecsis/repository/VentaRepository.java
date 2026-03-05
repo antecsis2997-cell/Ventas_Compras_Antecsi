@@ -15,6 +15,7 @@ import java.util.List;
 
 public interface VentaRepository extends JpaRepository<Venta, Long> {
     List<Venta> findByFechaBetween(LocalDateTime inicio, LocalDateTime fin);
+    List<Venta> findByRequiereDeliveryTrueAndEstadoEntrega(EstadoEntrega estadoEntrega);
 
     List<Venta> findByFechaBetweenAndSectorId(LocalDateTime inicio, LocalDateTime fin, Long sectorId);
 

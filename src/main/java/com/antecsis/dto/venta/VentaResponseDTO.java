@@ -2,6 +2,7 @@ package com.antecsis.dto.venta;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class VentaResponseDTO {
     private Long id;
@@ -32,6 +34,10 @@ public class VentaResponseDTO {
     private String direccionEntrega;
     private String estadoEntrega;
     private String entregadoPorNombre;
+    private String codigoTracking;
+    private String confirmacionCorreo;
+    private String confirmacionTelefono;
+    private LocalDateTime confirmacionFecha;
     private List<VentaItemDTO> items;
 
     @Getter

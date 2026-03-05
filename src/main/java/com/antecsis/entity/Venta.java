@@ -87,6 +87,26 @@ public class Venta {
     @JoinColumn(name = "usuario_entrega_id")
     private Usuario usuarioEntrega;
 
+    /** Código de tracking para seguimiento del envío. */
+    @Column(name = "codigo_tracking", length = 50)
+    private String codigoTracking;
+
+    /** Firma digital del cliente al confirmar recepción (base64). */
+    @Column(name = "confirmacion_firma", columnDefinition = "TEXT")
+    private String confirmacionFirma;
+
+    /** Correo del cliente en confirmación. */
+    @Column(name = "confirmacion_correo", length = 255)
+    private String confirmacionCorreo;
+
+    /** Teléfono del cliente en confirmación. */
+    @Column(name = "confirmacion_telefono", length = 50)
+    private String confirmacionTelefono;
+
+    /** Fecha de confirmación del cliente. */
+    @Column(name = "confirmacion_fecha")
+    private java.time.LocalDateTime confirmacionFecha;
+
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     private List<VentaDetalle> detalles;
 }

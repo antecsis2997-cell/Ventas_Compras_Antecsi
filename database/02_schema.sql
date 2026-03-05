@@ -186,6 +186,32 @@ DO $$ BEGIN
     ALTER TABLE public.ventas ADD COLUMN usuario_entrega_id BIGINT REFERENCES public.usuarios(id);
   END IF;
 END $$;
+-- Tracking y confirmación
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='codigo_tracking') THEN
+    ALTER TABLE public.ventas ADD COLUMN codigo_tracking VARCHAR(50);
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='confirmacion_firma') THEN
+    ALTER TABLE public.ventas ADD COLUMN confirmacion_firma TEXT;
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='confirmacion_correo') THEN
+    ALTER TABLE public.ventas ADD COLUMN confirmacion_correo VARCHAR(255);
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='confirmacion_telefono') THEN
+    ALTER TABLE public.ventas ADD COLUMN confirmacion_telefono VARCHAR(50);
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='confirmacion_fecha') THEN
+    ALTER TABLE public.ventas ADD COLUMN confirmacion_fecha TIMESTAMP;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_ventas_cliente ON public.ventas(cliente_id);
 CREATE INDEX IF NOT EXISTS idx_ventas_usuario ON public.ventas(usuario_id);

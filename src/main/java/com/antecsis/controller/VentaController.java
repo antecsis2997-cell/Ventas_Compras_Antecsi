@@ -1,5 +1,7 @@
 package com.antecsis.controller;
 
+import com.antecsis.dto.logistica.MetricasEntregasVendedorDTO;
+import com.antecsis.dto.venta.ConfirmacionEntregaRequestDTO;
 import com.antecsis.dto.venta.VentaRequestDTO;
 import com.antecsis.dto.venta.VentaResponseDTO;
 import com.antecsis.service.VentaService;
@@ -82,5 +84,29 @@ public class VentaController {
     @PatchMapping("/{id}/marcar-entregado")
     public ResponseEntity<VentaResponseDTO> marcarEntregado(@Parameter(description = "ID de la venta") @PathVariable Long id) {
         return ResponseEntity.ok(service.marcarEntregado(id));
+    }
+
+    @Operation(summary = "Métricas de entregas por vendedor", description = "Cantidad de entregas y monto total por vendedor. Para Logística.")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA')")
+    @GetMapping("/metricas-entregas-vendedor")
+    public ResponseEntity<java.util.List<MetricasEntregasVendedorDTO>> metricasEntregasPorVendedor(
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.metricasEntregasPorVendedor(sectorId));
+    }
+
+    @Operation(summary = "Solicitar tracking", description = "Genera código de tracking para seguimiento del envío.")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @PostMapping("/{id}/solicitar-tracking")
+    public ResponseEntity<VentaResponseDTO> solicitarTracking(@PathVariable Long id) {
+        return ResponseEntity.ok(service.solicitarTracking(id));
+    }
+
+    @Operation(summary = "Confirmar entrega", description = "Registra la confirmación del cliente: firma digital, correo, teléfono.")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @PostMapping("/{id}/confirmar-entrega")
+    public ResponseEntity<VentaResponseDTO> confirmarEntrega(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody ConfirmacionEntregaRequestDTO dto) {
+        return ResponseEntity.ok(service.confirmarEntrega(id, dto));
     }
 }
