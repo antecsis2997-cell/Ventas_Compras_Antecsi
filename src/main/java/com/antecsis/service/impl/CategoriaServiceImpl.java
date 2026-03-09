@@ -32,17 +32,17 @@ public class CategoriaServiceImpl implements CategoriaService {
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
         if (sectorId != null) {
-            if (repo.existsByNombreAndSectorId(dto.getNombre(), sectorId)) {
+            if (repo.existsByNombreAndSectorId(dto.nombre(), sectorId)) {
                 throw new BusinessException("Categoría ya existe en tu bodega");
             }
         } else {
-            if (repo.existsByNombre(dto.getNombre())) {
+            if (repo.existsByNombre(dto.nombre())) {
                 throw new BusinessException("Categoría ya existe");
             }
         }
 
         Categoria c = new Categoria();
-        c.setNombre(dto.getNombre());
+        c.setNombre(dto.nombre());
         c.setSector(usuario.getSede());
         Categoria guardada = repo.save(c);
         return new CategoriaResponseDTO(guardada.getId(), guardada.getNombre());
@@ -66,7 +66,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         Categoria c = repo.findById(id)
                 .orElseThrow(() -> new BusinessException("Categoría no existe"));
         verificarAccesoSector(c.getSector());
-        c.setNombre(dto.getNombre());
+        c.setNombre(dto.nombre());
         repo.save(c);
         return new CategoriaResponseDTO(c.getId(), c.getNombre());
     }

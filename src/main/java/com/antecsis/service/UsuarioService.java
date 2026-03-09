@@ -1,8 +1,11 @@
 package com.antecsis.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.antecsis.dto.usuario.UsuarioCorreoDTO;
 import com.antecsis.dto.usuario.UsuarioCreateRequest;
 import com.antecsis.dto.usuario.UsuarioResponseDTO;
 import com.antecsis.dto.usuario.UsuarioUpdateRequest;
@@ -14,4 +17,7 @@ public interface UsuarioService {
 	UsuarioResponseDTO actualizar(Long id, UsuarioUpdateRequest dto);
 	void eliminar(Long id);
     void actualizarActivo(Long id, boolean activo);
+
+    /** Busca usuarios por correo (autocomplete, máx 10). Para selector de remitente en solicitudes. */
+    List<UsuarioCorreoDTO> buscarPorCorreo(String q);
 }

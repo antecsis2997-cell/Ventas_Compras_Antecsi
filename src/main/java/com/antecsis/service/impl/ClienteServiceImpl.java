@@ -33,29 +33,29 @@ public class ClienteServiceImpl implements ClienteService {
 
         // Validar email duplicado por sector
         if (sectorId != null) {
-            repository.findByEmailAndSectorId(dto.getEmail(), sectorId).ifPresent(c -> {
+            repository.findByEmailAndSectorId(dto.email(), sectorId).ifPresent(c -> {
                 throw new BusinessException("El email ya está registrado en tu bodega");
             });
         } else {
-            repository.findByEmail(dto.getEmail()).ifPresent(c -> {
+            repository.findByEmail(dto.email()).ifPresent(c -> {
                 throw new BusinessException("El email ya está registrado");
             });
         }
 
         // Validar documento duplicado por sector
-        if (sectorId != null && dto.getDocumento() != null && !dto.getDocumento().isBlank()) {
-            if (repository.existsByDocumentoAndSectorId(dto.getDocumento(), sectorId)) {
+        if (sectorId != null && dto.documento() != null && !dto.documento().isBlank()) {
+            if (repository.existsByDocumentoAndSectorId(dto.documento(), sectorId)) {
                 throw new BusinessException("El documento ya está registrado en tu bodega");
             }
         }
 
         Cliente cliente = new Cliente();
-        cliente.setNombre(dto.getNombre());
-        cliente.setEmail(dto.getEmail());
-        cliente.setTelefono(dto.getTelefono());
-        cliente.setTipoDocumento(dto.getTipoDocumento());
-        cliente.setDocumento(dto.getDocumento());
-        cliente.setDireccion(dto.getDireccion());
+        cliente.setNombre(dto.nombre());
+        cliente.setEmail(dto.email());
+        cliente.setTelefono(dto.telefono());
+        cliente.setTipoDocumento(dto.tipoDocumento());
+        cliente.setDocumento(dto.documento());
+        cliente.setDireccion(dto.direccion());
         cliente.setSector(usuario.getSede());
         cliente.setActivo(true);
 
@@ -99,34 +99,34 @@ public class ClienteServiceImpl implements ClienteService {
 
         Long sectorId = obtenerSectorIdAutenticado();
         if (sectorId != null) {
-            repository.findByEmailAndSectorId(dto.getEmail(), sectorId).ifPresent(existing -> {
+            repository.findByEmailAndSectorId(dto.email(), sectorId).ifPresent(existing -> {
                 if (!existing.getId().equals(id)) {
                     throw new BusinessException("El email ya está registrado por otro cliente en tu bodega");
                 }
             });
             // Validar documento duplicado
-            if (dto.getDocumento() != null && !dto.getDocumento().isBlank()) {
+            if (dto.documento() != null && !dto.documento().isBlank()) {
                 boolean existeOtroConMismoDocumento = repository.findBySectorId(sectorId, Pageable.unpaged())
                     .stream()
-                    .anyMatch(c -> !c.getId().equals(id) && dto.getDocumento().equals(c.getDocumento()));
+                    .anyMatch(c -> !c.getId().equals(id) && dto.documento().equals(c.getDocumento()));
                 if (existeOtroConMismoDocumento) {
                     throw new BusinessException("El documento ya está registrado por otro cliente en tu bodega");
                 }
             }
         } else {
-            repository.findByEmail(dto.getEmail()).ifPresent(existing -> {
+            repository.findByEmail(dto.email()).ifPresent(existing -> {
                 if (!existing.getId().equals(id)) {
                     throw new BusinessException("El email ya está registrado por otro cliente");
                 }
             });
         }
 
-        cliente.setNombre(dto.getNombre());
-        cliente.setEmail(dto.getEmail());
-        cliente.setTelefono(dto.getTelefono());
-        cliente.setTipoDocumento(dto.getTipoDocumento());
-        cliente.setDocumento(dto.getDocumento());
-        cliente.setDireccion(dto.getDireccion());
+        cliente.setNombre(dto.nombre());
+        cliente.setEmail(dto.email());
+        cliente.setTelefono(dto.telefono());
+        cliente.setTipoDocumento(dto.tipoDocumento());
+        cliente.setDocumento(dto.documento());
+        cliente.setDireccion(dto.direccion());
 
         Cliente guardado = repository.save(cliente);
         return toResponseDTO(guardado);

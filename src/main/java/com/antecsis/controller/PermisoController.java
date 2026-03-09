@@ -38,7 +38,7 @@ public class PermisoController {
 
     @Operation(summary = "Obtener permisos de un usuario",
             description = "Lista todos los módulos indicando cuáles tiene asignados. Solo SUPERUSUARIO o ADMIN.")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPERUSUARIO','ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
     @GetMapping("/usuarios/{usuarioId}")
     public ResponseEntity<List<ModuloDTO>> obtenerPermisosUsuario(@PathVariable Long usuarioId) {
         return ResponseEntity.ok(permisoService.obtenerPermisosUsuario(usuarioId));
@@ -46,12 +46,12 @@ public class PermisoController {
 
     @Operation(summary = "Actualizar permisos de un usuario",
             description = "Reemplaza los módulos asignados al usuario. Enviar los códigos de módulos que debe tener. Solo SUPERUSUARIO o ADMIN.")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPERUSUARIO','ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
     @PutMapping("/usuarios/{usuarioId}")
     public ResponseEntity<Map<String, Object>> actualizarPermisos(
             @PathVariable Long usuarioId,
             @RequestBody @Valid PermisoUpdateRequest request) {
-        permisoService.actualizarPermisosUsuario(usuarioId, request.getModuloCodigos());
+        permisoService.actualizarPermisosUsuario(usuarioId, request.moduloCodigos());
         return ResponseEntity.ok(Map.of("success", true, "message", "Permisos actualizados correctamente"));
     }
 }

@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,13 +27,12 @@ public class SolicitudProductoServiceImpl implements SolicitudProductoService {
     @Transactional
     public SolicitudProductoResponseDTO crear(SolicitudProductoRequestDTO dto) {
         SolicitudProducto s = new SolicitudProducto();
-        s.setNombreEmisor(dto.getNombreEmisor());
-        s.setDescripcion(dto.getDescripcion());
-        s.setPrecio(dto.getPrecio());
-        s.setEstado(dto.getEstado() != null ? dto.getEstado() : com.antecsis.entity.EstadoSolicitud.LEVE);
-        if (dto.getProductoId() != null) {
-            Producto p = productoRepository.findById(dto.getProductoId()).orElse(null);
-            s.setProducto(p);
+        s.setNombreEmisor(dto.nombreEmisor());
+        s.setDescripcion(dto.descripcion());
+        s.setPrecio(dto.precio());
+        s.setEstado(dto.estado() != null ? dto.estado() : com.antecsis.entity.EstadoSolicitud.LEVE);
+        if (dto.productoId() != null) {
+            productoRepository.findById(dto.productoId()).ifPresent(s::setProducto);
         }
         SolicitudProducto guardado = repository.save(s);
         return toDTO(guardado);
@@ -49,7 +47,7 @@ public class SolicitudProductoServiceImpl implements SolicitudProductoService {
     @Override
     @Transactional(readOnly = true)
     public List<SolicitudProductoResponseDTO> listarPendientes() {
-        return repository.findByAtendidaFalseOrderByFechaDesc().stream().map(this::toDTO).collect(Collectors.toList());
+        return repository.findByAtendidaFalseOrderByFechaDesc().stream().map(this::toDTO).toList();
     }
 
     @Override

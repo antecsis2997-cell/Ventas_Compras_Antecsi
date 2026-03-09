@@ -2,29 +2,22 @@ package com.antecsis.dto.producto;
 
 import java.math.BigDecimal;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-@AllArgsConstructor
-public class ProductoResponseDTO {
-	private Long id;
-	private String codigo;
-	private String nombre;
-	private String descripcion;
-	private BigDecimal precio;
-	private BigDecimal precioCompra;
-	private Integer stock;
-	private Long categoriaId;
-	private String categoriaNombre;
-	private String moneda;
-	private String unidadMedida;
-	private String imagenUrl;
-	private Integer stockMinimoAlerta;
-	private String tipo;
-	private String marca;
-	private BigDecimal cantidad;
-	private Boolean activo;
-}
+public record ProductoResponseDTO(
+    Long id,
+    String codigo,
+    String nombre,
+    String descripcion,
+    BigDecimal precio,
+    BigDecimal precioCompra,
+    Integer stock,
+    Long categoriaId,
+    String categoriaNombre,
+    String moneda,
+    String unidadMedida,
+    String imagenUrl,
+    Integer stockMinimoAlerta,
+    String tipo,
+    String marca,
+    BigDecimal cantidad,
+    Boolean activo
+) {}

@@ -24,12 +24,12 @@ public class MensajeServiceImpl implements MensajeService {
     @Transactional
     public MensajeResponseDTO crear(MensajeRequestDTO dto) {
         Mensaje m = new Mensaje();
-        m.setNombreReceptor(dto.getNombreReceptor());
-        m.setItem(dto.getItem());
-        m.setDescripcion(dto.getDescripcion());
-        m.setPrecio(dto.getPrecio());
-        m.setEstado(dto.getEstado());
-        m.setNombreEmisor(dto.getNombreEmisor());
+        m.setNombreReceptor(dto.nombreReceptor());
+        m.setItem(dto.item());
+        m.setDescripcion(dto.descripcion());
+        m.setPrecio(dto.precio());
+        m.setEstado(dto.estado());
+        m.setNombreEmisor(dto.nombreEmisor());
         Mensaje guardado = repository.save(m);
         MensajeResponseDTO response = toDTO(guardado);
         messagingTemplate.convertAndSend("/topic/mensajes", response);

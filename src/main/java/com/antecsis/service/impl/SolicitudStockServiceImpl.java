@@ -18,6 +18,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class SolicitudStockServiceImpl implements SolicitudStockService {
@@ -35,14 +37,14 @@ public class SolicitudStockServiceImpl implements SolicitudStockService {
         s.setNombre(solicitante.getNombre() != null ? solicitante.getNombre() : solicitante.getUsername());
         s.setApellidos(solicitante.getApellido() != null ? solicitante.getApellido() : "");
         s.setCargo(solicitante.getRol() != null ? solicitante.getRol().getNombre() : "CAJERO");
-        s.setAsunto(dto.getAsunto());
-        s.setRemitenteEmail(dto.getRemitenteEmail());
-        s.setNombreRemitente(dto.getNombreRemitente());
-        s.setUnidadMedida(dto.getUnidadMedida() != null ? dto.getUnidadMedida() : "UND");
-        s.setCantidad(dto.getCantidad());
+        s.setAsunto(dto.asunto());
+        s.setRemitenteEmail(dto.remitenteEmail());
+        s.setNombreRemitente(dto.nombreRemitente());
+        s.setUnidadMedida(Objects.requireNonNullElse(dto.unidadMedida(), "UND"));
+        s.setCantidad(dto.cantidad());
         s.setEstado(EstadoSolicitudStock.PENDIENTE);
-        if (dto.getProductoId() != null) {
-            Producto p = productoRepository.findById(dto.getProductoId())
+        if (dto.productoId() != null) {
+            Producto p = productoRepository.findById(dto.productoId())
                     .orElseThrow(() -> new BusinessException("Producto no encontrado"));
             s.setProducto(p);
         }

@@ -33,13 +33,18 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
 
     Page<Venta> findByRequiereDeliveryTrueAndEstadoAndSectorIdAndTipoEntrega(EstadoVenta estado, Long sectorId, TipoEntrega tipoEntrega, Pageable pageable);
 
-    @Query("SELECT v FROM Venta v WHERE v.requiereDelivery = true AND v.tipoEntrega = :tipo AND " +
-           "(v.estado = :pendiente OR v.estadoEntrega = :entregado) ORDER BY v.fecha DESC")
+    @Query("""
+        SELECT v FROM Venta v WHERE v.requiereDelivery = true AND v.tipoEntrega = :tipo
+        AND (v.estado = :pendiente OR v.estadoEntrega = :entregado) ORDER BY v.fecha DESC
+        """)
     Page<Venta> findEntregasConHistorial(@Param("tipo") TipoEntrega tipo, @Param("pendiente") EstadoVenta pendiente,
             @Param("entregado") EstadoEntrega entregado, Pageable pageable);
 
-    @Query("SELECT v FROM Venta v WHERE v.requiereDelivery = true AND v.tipoEntrega = :tipo AND v.sector.id = :sectorId AND " +
-           "(v.estado = :pendiente OR v.estadoEntrega = :entregado) ORDER BY v.fecha DESC")
+    @Query("""
+        SELECT v FROM Venta v WHERE v.requiereDelivery = true AND v.tipoEntrega = :tipo
+        AND v.sector.id = :sectorId AND (v.estado = :pendiente OR v.estadoEntrega = :entregado)
+        ORDER BY v.fecha DESC
+        """)
     Page<Venta> findEntregasConHistorialBySector(@Param("tipo") TipoEntrega tipo, @Param("sectorId") Long sectorId,
             @Param("pendiente") EstadoVenta pendiente, @Param("entregado") EstadoEntrega entregado, Pageable pageable);
 }

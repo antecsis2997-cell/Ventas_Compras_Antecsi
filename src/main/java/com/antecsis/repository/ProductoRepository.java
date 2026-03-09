@@ -15,10 +15,15 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     Page<Producto> findBySectorIdAndStockLessThanEqual(Long sectorId, Integer stock, Pageable pageable);
 
-    @Query("SELECT p FROM Producto p WHERE p.stockMinimoAlerta IS NOT NULL AND p.stock <= p.stockMinimoAlerta")
+    @Query("""
+        SELECT p FROM Producto p WHERE p.stockMinimoAlerta IS NOT NULL AND p.stock <= p.stockMinimoAlerta
+        """)
     Page<Producto> findByStockBajoPorAlerta(Pageable pageable);
 
-    @Query("SELECT p FROM Producto p WHERE p.stockMinimoAlerta IS NOT NULL AND p.stock <= p.stockMinimoAlerta AND p.sector.id = :sectorId")
+    @Query("""
+        SELECT p FROM Producto p WHERE p.stockMinimoAlerta IS NOT NULL
+        AND p.stock <= p.stockMinimoAlerta AND p.sector.id = :sectorId
+        """)
     Page<Producto> findByStockBajoPorAlertaAndSectorId(@Param("sectorId") Long sectorId, Pageable pageable);
 
     boolean existsByNombreAndSectorId(String nombre, Long sectorId);

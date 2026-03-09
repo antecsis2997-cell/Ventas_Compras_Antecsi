@@ -1,5 +1,7 @@
 package com.antecsis.exception;
 
+import com.antecsis.dto.ErrorResponse;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,64 +19,37 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<Map<String, Object>> handleBusiness(BusinessException ex) {
-        return ResponseEntity.badRequest().body(
-                Map.of(
-                        "success", false,
-                        "message", ex.getMessage()
-                )
-        );
+    public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
+        return ResponseEntity.badRequest().body(ErrorResponse.withMessage(ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Acceso denegado: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                Map.of(
-                        "success", false,
-                        "message", "No tiene permiso para realizar esta acción")
-        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.withMessage("No tiene permiso para realizar esta acción"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         log.debug("Validación fallida: {}", ex.getBindingResult().getFieldErrors());
         Map<String, String> errors = new HashMap<>();
-
-        ex.getBindingResult()
-                .getFieldErrors()
-                .forEach(e -> errors.put(
-                        e.getField(),
-                        e.getDefaultMessage()
-                ));
-
-        return ResponseEntity.badRequest().body(
-                Map.of(
-                        "success", false,
-                        "errors", errors
-                )
-        );
+        ex.getBindingResult().getFieldErrors()
+                .forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+        return ResponseEntity.badRequest().body(ErrorResponse.withErrors(errors));
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
+    public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {
         log.error("Error inesperado: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                Map.of(
-                        "success", false,
-                        "message", "Error interno del servidor"
-                )
-        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.withMessage("Error interno del servidor"));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
         log.error("Error general: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                Map.of(
-                        "success", false,
-                        "message", "Error interno del servidor"
-                )
-        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.withMessage("Error interno del servidor"));
     }
 }

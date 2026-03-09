@@ -1,26 +1,22 @@
 package com.antecsis.dto.usuario;
 
+import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDate;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter 
-@Setter
-public class UsuarioCreateRequest {
-	@NotBlank
-    private String username;
+public record UsuarioCreateRequest(
+    @NotBlank
+    String username,
 
     @NotBlank
-    private String password;
+    String password,
 
     @NotBlank
-    private String rol;  // ADMIN, CAJERO o ALMACENERO (solo SUPERUSUARIO puede crear)
+    String rol,
 
-    private String nombre;
-    private String apellido;
-    private String correo;
-    private LocalDate fechaNacimiento;
-    private Long sedeId;  // Sector (Sede de Cajero / Sede de Venta)
-}
+    String nombre,
+    String apellido,
+    String correo,
+    LocalDate fechaNacimiento,
+    Long sedeId
+) {}

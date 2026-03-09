@@ -39,50 +39,50 @@ public class CompraServiceImpl implements CompraService {
     @Override
     @Transactional
     public CompraResponseDTO crear(CompraRequestDTO dto) {
-        var proveedor = proveedorRepo.findById(dto.getProveedorId())
+        var proveedor = proveedorRepo.findById(dto.proveedorId())
                 .orElseThrow(() -> new BusinessException("Proveedor no existe"));
 
         Usuario usuario = obtenerUsuarioAutenticado();
         verificarAccesoSector(proveedor.getSector());
 
-        Compra compra = new Compra();
+        var compra = new Compra();
         compra.setProveedor(proveedor);
         compra.setUsuario(usuario);
         compra.setSector(usuario.getSede());
         compra.setFecha(LocalDateTime.now());
         compra.setEstado(EstadoCompra.COMPLETADA);
-        compra.setObservaciones(dto.getObservaciones());
-        compra.setNumeroDocumento(dto.getNumeroDocumento());
+        compra.setObservaciones(dto.observaciones());
+        compra.setNumeroDocumento(dto.numeroDocumento());
 
-        if (dto.getMetodoPagoId() != null) {
-            MetodoPago mp = metodoPagoRepo.findById(dto.getMetodoPagoId())
+        if (dto.metodoPagoId() != null) {
+            MetodoPago mp = metodoPagoRepo.findById(dto.metodoPagoId())
                     .orElseThrow(() -> new BusinessException("Método de pago no existe"));
             compra.setMetodoPago(mp);
         }
 
-        List<CompraDetalle> detalles = new ArrayList<>();
+        var detalles = new ArrayList<CompraDetalle>();
         BigDecimal total = BigDecimal.ZERO;
 
-        for (CompraItemDTO item : dto.getItems()) {
-            Producto producto = productoRepo.findById(item.getProductoId())
-                    .orElseThrow(() -> new BusinessException("Producto no existe: ID " + item.getProductoId()));
+        for (CompraItemDTO item : dto.items()) {
+            Producto producto = productoRepo.findById(item.productoId())
+                    .orElseThrow(() -> new BusinessException("Producto no existe: ID " + item.productoId()));
             verificarAccesoSector(producto.getSector());
 
             int stockAnterior = producto.getStock();
-            producto.setStock(stockAnterior + item.getCantidad());
+            producto.setStock(stockAnterior + item.cantidad());
             productoRepo.save(producto);
 
             inventarioService.registrarMovimiento(producto, TipoMovimiento.COMPRA,
-                    item.getCantidad(), stockAnterior, producto.getStock(),
+                    item.cantidad(), stockAnterior, producto.getStock(),
                     "Compra", null, usuario, usuario.getSede());
 
             CompraDetalle det = new CompraDetalle();
             det.setCompra(compra);
             det.setProducto(producto);
-            det.setCantidad(item.getCantidad());
-            det.setPrecioUnitario(item.getPrecioUnitario());
+            det.setCantidad(item.cantidad());
+            det.setPrecioUnitario(item.precioUnitario());
 
-            BigDecimal subtotal = item.getPrecioUnitario().multiply(BigDecimal.valueOf(item.getCantidad()));
+            BigDecimal subtotal = item.precioUnitario().multiply(BigDecimal.valueOf(item.cantidad()));
             total = total.add(subtotal);
             detalles.add(det);
         }
@@ -182,8 +182,8 @@ public class CompraServiceImpl implements CompraService {
     }
 
     private CompraResponseDTO toResponseDTO(Compra c) {
-        List<CompraResponseDTO.CompraItemDTO> items = c.getDetalles().stream()
-                .map(d -> new CompraResponseDTO.CompraItemDTO(
+        List<CompraResponseDTO.CompraItemResponseDTO> items = c.getDetalles().stream()
+                .map(d -> new CompraResponseDTO.CompraItemResponseDTO(
                         d.getProducto().getNombre(),
                         d.getCantidad(),
                         d.getPrecioUnitario(),

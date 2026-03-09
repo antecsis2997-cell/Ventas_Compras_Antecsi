@@ -1,16 +1,29 @@
 server:
   port: 8080
 
+# CORS: orígenes permitidos (coma separados)
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200}
+
+# Logging base (dev/prod pueden sobrescribir)
+logging:
+  level:
+    org.springframework.security: WARN
+    org.hibernate: WARN
+
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/ventas_db}
     username: ${DB_USERNAME:ventas_user}
     password: ${DB_PASSWORD:PasswordSeguro123}
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: true  # En producción usar perfil 'prod' (show-sql: false)
     properties:
       hibernate:
         default_schema: public
@@ -19,10 +32,11 @@ spring:
     init:
       mode: never
 
-# JWT: en producción definir JWT_SECRET (mín. 32 caracteres) y JWT_EXPIRATION por variable de entorno
+# JWT: en producción definir JWT_SECRET, JWT_EXPIRATION, JWT_REFRESH_EXPIRATION por variable de entorno
 jwt:
   secret: ${JWT_SECRET:CLAVE_SUPER_SECRETA_123456789_ANTECSIS_SEGURA_2026}
-  expiration: ${JWT_EXPIRATION:3600000}
+  expiration: ${JWT_EXPIRATION:3600000}       # Access token: 1 hora (ms)
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # Refresh token: 7 días (ms)
 
 springdoc:
   api-docs:

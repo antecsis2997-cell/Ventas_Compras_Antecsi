@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,35 +45,35 @@ public class VentaServiceImpl implements VentaService {
     @Override
     @Transactional
     public VentaResponseDTO crear(VentaRequestDTO dto) {
-        Cliente cliente = clienteRepo.findById(dto.getClienteId())
+        var cliente = clienteRepo.findById(dto.clienteId())
                 .orElseThrow(() -> new BusinessException("Cliente no existe"));
 
-        Usuario usuario = obtenerUsuarioAutenticado();
+        var usuario = obtenerUsuarioAutenticado();
         verificarAccesoSector(cliente.getSector());
 
-        Venta venta = new Venta();
+        var venta = new Venta();
         venta.setCliente(cliente);
         venta.setUsuario(usuario);
         venta.setSector(usuario.getSede());
         venta.setFecha(LocalDateTime.now());
-        venta.setObservaciones(dto.getObservaciones());
-        venta.setMoneda(dto.getMoneda() != null ? dto.getMoneda() : "PEN");
-        venta.setConCuotas(dto.getConCuotas());
+        venta.setObservaciones(dto.observaciones());
+        venta.setMoneda(Objects.requireNonNullElse(dto.moneda(), "PEN"));
+        venta.setConCuotas(dto.conCuotas());
 
         // Delivery: si requiere delivery, venta queda PENDIENTE hasta que Logística marque entregado
-        Boolean requiereDelivery = Boolean.TRUE.equals(dto.getRequiereDelivery());
+        Boolean requiereDelivery = Boolean.TRUE.equals(dto.requiereDelivery());
         venta.setRequiereDelivery(requiereDelivery);
         if (requiereDelivery) {
             venta.setEstado(EstadoVenta.PENDIENTE);
             venta.setEstadoEntrega(EstadoEntrega.PENDIENTE);
-            if (dto.getTipoEntrega() != null && !dto.getTipoEntrega().isBlank()) {
+            if (dto.tipoEntrega() != null && !dto.tipoEntrega().isBlank()) {
                 try {
-                    venta.setTipoEntrega(TipoEntrega.valueOf(dto.getTipoEntrega().toUpperCase().trim()));
+                    venta.setTipoEntrega(TipoEntrega.valueOf(dto.tipoEntrega().toUpperCase().trim()));
                 } catch (IllegalArgumentException e) {
                     throw new BusinessException("Tipo de entrega inválido. Use INMEDIATA, PROGRAMADA_3_5 o PROGRAMADA_5_6_MESES.");
                 }
             }
-            venta.setDireccionEntrega(dto.getDireccionEntrega());
+            venta.setDireccionEntrega(dto.direccionEntrega());
             if (venta.getTipoEntrega() == TipoEntrega.INMEDIATA
                     && (venta.getDireccionEntrega() == null || venta.getDireccionEntrega().isBlank())) {
                 throw new BusinessException("La dirección de entrega es obligatoria cuando el tipo es INMEDIATA.");
@@ -88,54 +89,54 @@ public class VentaServiceImpl implements VentaService {
             venta.setEstadoEntrega(null);
         }
 
-        if (dto.getTipoDocumento() != null && !dto.getTipoDocumento().isBlank()) {
+        if (dto.tipoDocumento() != null && !dto.tipoDocumento().isBlank()) {
             try {
-                venta.setTipoDocumento(TipoDocumentoVenta.valueOf(dto.getTipoDocumento().toUpperCase().trim()));
+                venta.setTipoDocumento(TipoDocumentoVenta.valueOf(dto.tipoDocumento().toUpperCase().trim()));
             } catch (IllegalArgumentException e) {
                 throw new BusinessException("Tipo de documento inválido. Use FACTURA o BOLETA.");
             }
         }
-        venta.setNumeroDocumento(dto.getNumeroDocumento());
+        venta.setNumeroDocumento(dto.numeroDocumento());
 
-        if (dto.getMetodoPagoId() != null) {
-            MetodoPago mp = metodoPagoRepo.findById(dto.getMetodoPagoId())
+        if (dto.metodoPagoId() != null) {
+            MetodoPago mp = metodoPagoRepo.findById(dto.metodoPagoId())
                     .orElseThrow(() -> new BusinessException("Método de pago no existe"));
             venta.setMetodoPago(mp);
         }
 
-        List<VentaDetalle> detalles = new ArrayList<>();
+        var detalles = new ArrayList<VentaDetalle>();
         BigDecimal total = BigDecimal.ZERO;
 
-        for (VentaItemDTO item : dto.getItems()) {
-            Producto producto = productoRepo.findById(item.getProductoId())
-                    .orElseThrow(() -> new BusinessException("Producto no existe: ID " + item.getProductoId()));
+        for (VentaItemDTO item : dto.items()) {
+            Producto producto = productoRepo.findById(item.productoId())
+                    .orElseThrow(() -> new BusinessException("Producto no existe: ID " + item.productoId()));
             verificarAccesoSector(producto.getSector());
 
-            if (producto.getStock() < item.getCantidad()) {
+            if (producto.getStock() < item.cantidad()) {
                 throw new BusinessException("Stock insuficiente para el producto: " + producto.getNombre()
-                        + " (disponible: " + producto.getStock() + ", solicitado: " + item.getCantidad() + ")");
+                        + " (disponible: " + producto.getStock() + ", solicitado: " + item.cantidad() + ")");
             }
 
             int stockAnterior = producto.getStock();
-            producto.setStock(stockAnterior - item.getCantidad());
+            producto.setStock(stockAnterior - item.cantidad());
             productoRepo.save(producto);
 
             inventarioService.registrarMovimiento(producto, TipoMovimiento.VENTA,
-                    item.getCantidad(), stockAnterior, producto.getStock(),
+                    item.cantidad(), stockAnterior, producto.getStock(),
                     "Venta", null, usuario, usuario.getSede());
 
             VentaDetalle det = new VentaDetalle();
             det.setVenta(venta);
             det.setProducto(producto);
-            det.setCantidad(item.getCantidad());
+            det.setCantidad(item.cantidad());
             
             // Usar precio personalizado si viene en el DTO, sino usar el del catálogo
-            BigDecimal precioUnitario = item.getPrecioUnitario() != null 
-                    ? item.getPrecioUnitario() 
+            BigDecimal precioUnitario = item.precioUnitario() != null 
+                    ? item.precioUnitario() 
                     : producto.getPrecio();
             det.setPrecioUnitario(precioUnitario);
 
-            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.getCantidad()));
+            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.cantidad()));
             total = total.add(subtotal);
             detalles.add(det);
         }
@@ -287,7 +288,7 @@ public class VentaServiceImpl implements VentaService {
                 .map(e -> {
                     List<Venta> ventas = e.getValue();
                     BigDecimal total = ventas.stream()
-                            .map(v -> v.getTotal() != null ? v.getTotal() : BigDecimal.ZERO)
+                            .map(v -> Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO))
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     String nombre = ventas.get(0).getUsuario().getUsername();
                     return new MetricasEntregasVendedorDTO(
@@ -325,12 +326,12 @@ public class VentaServiceImpl implements VentaService {
         if (!Boolean.TRUE.equals(venta.getRequiereDelivery())) {
             throw new BusinessException("Esta venta no tiene delivery");
         }
-        venta.setConfirmacionFirma(dto.getFirmaBase64());
-        venta.setConfirmacionCorreo(dto.getCorreo());
-        venta.setConfirmacionTelefono(dto.getTelefono());
+        venta.setConfirmacionFirma(dto.firmaBase64());
+        venta.setConfirmacionCorreo(dto.correo());
+        venta.setConfirmacionTelefono(dto.telefono());
         venta.setConfirmacionFecha(java.time.LocalDateTime.now());
         Venta guardada = ventaRepo.save(venta);
-        log.info("Confirmación de entrega registrada para venta #{} - correo: {}", ventaId, dto.getCorreo());
+        log.info("Confirmación de entrega registrada para venta #{} - correo: {}", ventaId, dto.correo());
         return toResponseDTO(guardada);
     }
 
@@ -365,8 +366,8 @@ public class VentaServiceImpl implements VentaService {
     }
 
     private VentaResponseDTO toResponseDTO(Venta v) {
-        List<VentaResponseDTO.VentaItemDTO> items = v.getDetalles().stream()
-                .map(d -> new VentaResponseDTO.VentaItemDTO(
+        List<VentaResponseDTO.VentaItemResponseDTO> items = v.getDetalles().stream()
+                .map(d -> new VentaResponseDTO.VentaItemResponseDTO(
                         d.getProducto().getNombre(),
                         d.getCantidad(),
                         d.getPrecioUnitario(),

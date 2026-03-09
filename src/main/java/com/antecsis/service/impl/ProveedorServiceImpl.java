@@ -32,21 +32,21 @@ public class ProveedorServiceImpl implements ProveedorService {
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
         if (sectorId != null) {
-            if (proveedorRepository.existsByNombreAndSectorId(dto.getNombre(), sectorId)) {
+            if (proveedorRepository.existsByNombreAndSectorId(dto.nombre(), sectorId)) {
                 throw new BusinessException("Ya existe un proveedor con ese nombre en tu bodega");
             }
         } else {
-            if (proveedorRepository.existsByNombre(dto.getNombre())) {
+            if (proveedorRepository.existsByNombre(dto.nombre())) {
                 throw new BusinessException("Ya existe un proveedor con ese nombre");
             }
         }
 
         Proveedor proveedor = new Proveedor();
-        proveedor.setNombre(dto.getNombre());
-        proveedor.setRuc(dto.getRuc());
-        proveedor.setEmail(dto.getEmail());
-        proveedor.setTelefono(dto.getTelefono());
-        proveedor.setDireccion(dto.getDireccion());
+        proveedor.setNombre(dto.nombre());
+        proveedor.setRuc(dto.ruc());
+        proveedor.setEmail(dto.email());
+        proveedor.setTelefono(dto.telefono());
+        proveedor.setDireccion(dto.direccion());
         proveedor.setSector(usuario.getSede());
         proveedor.setActivo(true);
 
@@ -80,11 +80,11 @@ public class ProveedorServiceImpl implements ProveedorService {
                 .orElseThrow(() -> new BusinessException("Proveedor no existe"));
         verificarAccesoSector(proveedor.getSector());
 
-        proveedor.setNombre(dto.getNombre());
-        proveedor.setRuc(dto.getRuc());
-        proveedor.setEmail(dto.getEmail());
-        proveedor.setTelefono(dto.getTelefono());
-        proveedor.setDireccion(dto.getDireccion());
+        proveedor.setNombre(dto.nombre());
+        proveedor.setRuc(dto.ruc());
+        proveedor.setEmail(dto.email());
+        proveedor.setTelefono(dto.telefono());
+        proveedor.setDireccion(dto.direccion());
 
         Proveedor guardado = proveedorRepository.save(proveedor);
         return toResponseDTO(guardado);

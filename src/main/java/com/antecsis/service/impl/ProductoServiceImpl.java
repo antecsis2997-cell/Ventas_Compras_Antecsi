@@ -18,6 +18,7 @@ import com.antecsis.repository.ProductoRepository;
 import com.antecsis.repository.UsuarioRepository;
 import com.antecsis.service.ProductoService;
 
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,38 +36,38 @@ public class ProductoServiceImpl implements ProductoService {
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
         // Validar duplicados por nombre dentro del mismo sector
-        if (sectorId != null && dto.getNombre() != null) {
-            if (repository.existsByNombreAndSectorId(dto.getNombre(), sectorId)) {
+        if (sectorId != null && dto.nombre() != null) {
+            if (repository.existsByNombreAndSectorId(dto.nombre(), sectorId)) {
                 throw new BusinessException("Ya existe un producto con ese nombre en tu bodega");
             }
         }
 
         // Validar duplicados por código dentro del mismo sector
-        if (sectorId != null && dto.getCodigo() != null && !dto.getCodigo().isBlank()) {
-            if (repository.existsByCodigoAndSectorId(dto.getCodigo(), sectorId)) {
+        if (sectorId != null && dto.codigo() != null && !dto.codigo().isBlank()) {
+            if (repository.existsByCodigoAndSectorId(dto.codigo(), sectorId)) {
                 throw new BusinessException("Ya existe un producto con ese código en tu bodega");
             }
         }
 
         Producto producto = new Producto();
-        producto.setCodigo(dto.getCodigo());
-        producto.setNombre(dto.getNombre());
-        producto.setDescripcion(dto.getDescripcion());
-        producto.setPrecio(dto.getPrecio());
-        producto.setPrecioCompra(dto.getPrecioCompra());
-        producto.setStock(dto.getStock());
-        producto.setMoneda(dto.getMoneda() != null ? dto.getMoneda() : "PEN");
-        producto.setUnidadMedida(dto.getUnidadMedida());
-        producto.setImagenUrl(dto.getImagenUrl());
-        producto.setStockMinimoAlerta(dto.getStockMinimoAlerta());
-        producto.setTipo(dto.getTipo());
-        producto.setMarca(dto.getMarca());
-        producto.setCantidad(dto.getCantidad());
+        producto.setCodigo(dto.codigo());
+        producto.setNombre(dto.nombre());
+        producto.setDescripcion(dto.descripcion());
+        producto.setPrecio(dto.precio());
+        producto.setPrecioCompra(dto.precioCompra());
+        producto.setStock(dto.stock());
+        producto.setMoneda(Objects.requireNonNullElse(dto.moneda(), "PEN"));
+        producto.setUnidadMedida(dto.unidadMedida());
+        producto.setImagenUrl(dto.imagenUrl());
+        producto.setStockMinimoAlerta(dto.stockMinimoAlerta());
+        producto.setTipo(dto.tipo());
+        producto.setMarca(dto.marca());
+        producto.setCantidad(dto.cantidad());
         producto.setSector(usuario.getSede());
         producto.setActivo(true);
 
-        if (dto.getCategoriaId() != null) {
-            Categoria cat = categoriaRepository.findById(dto.getCategoriaId())
+        if (dto.categoriaId() != null) {
+            Categoria cat = categoriaRepository.findById(dto.categoriaId())
                     .orElseThrow(() -> new BusinessException("Categoría no existe"));
             verificarAccesoSector(cat.getSector());
             producto.setCategoria(cat);
@@ -106,41 +107,41 @@ public class ProductoServiceImpl implements ProductoService {
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
         // Validar duplicados por nombre (excluyendo el producto actual)
-        if (sectorId != null && dto.getNombre() != null) {
+        if (sectorId != null && dto.nombre() != null) {
             boolean existeOtroConMismoNombre = repository.findBySectorId(sectorId, Pageable.unpaged())
                 .stream()
-                .anyMatch(p -> !p.getId().equals(id) && p.getNombre().equals(dto.getNombre()));
+                .anyMatch(p -> !p.getId().equals(id) && p.getNombre().equals(dto.nombre()));
             if (existeOtroConMismoNombre) {
                 throw new BusinessException("Ya existe otro producto con ese nombre en tu bodega");
             }
         }
 
         // Validar duplicados por código (excluyendo el producto actual)
-        if (sectorId != null && dto.getCodigo() != null && !dto.getCodigo().isBlank()) {
+        if (sectorId != null && dto.codigo() != null && !dto.codigo().isBlank()) {
             boolean existeOtroConMismoCodigo = repository.findBySectorId(sectorId, Pageable.unpaged())
                 .stream()
-                .anyMatch(p -> !p.getId().equals(id) && dto.getCodigo().equals(p.getCodigo()));
+                .anyMatch(p -> !p.getId().equals(id) && dto.codigo().equals(p.getCodigo()));
             if (existeOtroConMismoCodigo) {
                 throw new BusinessException("Ya existe otro producto con ese código en tu bodega");
             }
         }
 
-        producto.setCodigo(dto.getCodigo());
-        producto.setNombre(dto.getNombre());
-        producto.setDescripcion(dto.getDescripcion());
-        producto.setPrecio(dto.getPrecio());
-        producto.setPrecioCompra(dto.getPrecioCompra());
-        producto.setStock(dto.getStock());
-        producto.setMoneda(dto.getMoneda() != null ? dto.getMoneda() : "PEN");
-        producto.setUnidadMedida(dto.getUnidadMedida());
-        producto.setImagenUrl(dto.getImagenUrl());
-        producto.setStockMinimoAlerta(dto.getStockMinimoAlerta());
-        producto.setTipo(dto.getTipo());
-        producto.setMarca(dto.getMarca());
-        producto.setCantidad(dto.getCantidad());
+        producto.setCodigo(dto.codigo());
+        producto.setNombre(dto.nombre());
+        producto.setDescripcion(dto.descripcion());
+        producto.setPrecio(dto.precio());
+        producto.setPrecioCompra(dto.precioCompra());
+        producto.setStock(dto.stock());
+        producto.setMoneda(Objects.requireNonNullElse(dto.moneda(), "PEN"));
+        producto.setUnidadMedida(dto.unidadMedida());
+        producto.setImagenUrl(dto.imagenUrl());
+        producto.setStockMinimoAlerta(dto.stockMinimoAlerta());
+        producto.setTipo(dto.tipo());
+        producto.setMarca(dto.marca());
+        producto.setCantidad(dto.cantidad());
 
-        if (dto.getCategoriaId() != null) {
-            Categoria cat = categoriaRepository.findById(dto.getCategoriaId())
+        if (dto.categoriaId() != null) {
+            Categoria cat = categoriaRepository.findById(dto.categoriaId())
                     .orElseThrow(() -> new BusinessException("Categoría no existe"));
             verificarAccesoSector(cat.getSector());
             producto.setCategoria(cat);

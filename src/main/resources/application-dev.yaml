@@ -1,0 +1,15 @@
+# Perfil desarrollo: SQL visible, logs detallados, ddl-auto update
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    com.antecsis: DEBUG
+    org.springframework.web: INFO

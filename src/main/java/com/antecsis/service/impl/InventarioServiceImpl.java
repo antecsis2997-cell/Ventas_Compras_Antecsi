@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -78,13 +79,13 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional
     public MovimientoResponseDTO ajustarStock(AjusteStockRequestDTO dto) {
-        Producto producto = productoRepo.findById(dto.getProductoId())
+        Producto producto = productoRepo.findById(dto.productoId())
                 .orElseThrow(() -> new BusinessException("Producto no existe"));
         Usuario usuario = obtenerUsuarioAutenticado();
         verificarAccesoSector(producto.getSector());
 
         int stockAnterior = producto.getStock();
-        int nuevoStock = dto.getNuevoStock();
+        int nuevoStock = dto.nuevoStock();
         int diferencia = nuevoStock - stockAnterior;
 
         if (diferencia == 0) {
@@ -96,7 +97,7 @@ public class InventarioServiceImpl implements InventarioService {
 
         registrarMovimiento(producto, TipoMovimiento.AJUSTE, Math.abs(diferencia),
                 stockAnterior, nuevoStock,
-                dto.getMotivo() != null ? dto.getMotivo() : "Ajuste manual",
+                Objects.requireNonNullElse(dto.motivo(), "Ajuste manual"),
                 null, usuario, producto.getSector());
 
         return toMovimientoDTO(movimientoRepo.findByProductoId(producto.getId(),
@@ -134,7 +135,8 @@ public class InventarioServiceImpl implements InventarioService {
                 p.getUnidadMedida(),
                 p.getStockMinimoAlerta(),
                 p.getSector() != null ? p.getSector().getId() : null,
-                p.getSector() != null ? p.getSector().getNombreSector() : null
+                p.getSector() != null ? p.getSector().getNombreSector() : null,
+                p.getImagenUrl()
         );
     }
 

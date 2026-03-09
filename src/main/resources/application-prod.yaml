@@ -1,11 +1,18 @@
-# Perfil producción: buenas prácticas
+# Perfil producción: ddl validate, sin SQL en logs, logging reducido
 spring:
   jpa:
-    show-sql: false
+    show-sql: false  # Explícito para prod (base no define valor por defecto)
     hibernate:
       ddl-auto: validate
-  sql:
-    init:
-      mode: never
 
-# En producción usar variables de entorno: DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, JWT_EXPIRATION
+logging:
+  level:
+    root: WARN
+    org.springframework.web: WARN
+    org.hibernate: WARN
+
+# Variables de entorno requeridas en producción:
+#   SPRING_PROFILES_ACTIVE=prod
+#   DB_URL, DB_USERNAME, DB_PASSWORD
+#   JWT_SECRET (mín. 32 caracteres), JWT_EXPIRATION, JWT_REFRESH_EXPIRATION
+#   CORS_ALLOWED_ORIGINS

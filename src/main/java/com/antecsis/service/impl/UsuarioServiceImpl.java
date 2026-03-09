@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.antecsis.dto.usuario.UsuarioCorreoDTO;
 import com.antecsis.dto.usuario.UsuarioCreateRequest;
 import com.antecsis.dto.usuario.UsuarioResponseDTO;
 import com.antecsis.dto.usuario.UsuarioUpdateRequest;
@@ -71,34 +73,34 @@ public class UsuarioServiceImpl implements UsuarioService {
     public void crearUsuario(UsuarioCreateRequest dto) {
         Usuario principal = validarYObtenerUsuarioPrincipal();
 
-        if (usuarioRepository.findByUsername(dto.getUsername()).isPresent()) {
+        if (!usuarioRepository.findByUsername(dto.username()).isEmpty()) {
             throw new BusinessException("El usuario ya existe");
         }
 
-        if (!ROLES_PERMITIDOS.contains(dto.getRol())) {
+        if (!ROLES_PERMITIDOS.contains(dto.rol())) {
             throw new BusinessException("Rol no permitido. Use: ADMIN, CAJERO, ALMACENERO, VENTAS, LOGISTICA o ADMINISTRACION");
         }
-        if (esAdmin(principal) && "ADMIN".equals(dto.getRol())) {
+        if (esAdmin(principal) && "ADMIN".equals(dto.rol())) {
             throw new BusinessException("Solo puede crear usuarios de su punto (Cajero, Almacenero, Ventas, etc.). No puede crear otro Administrador.");
         }
-        if ("ADMIN".equals(dto.getRol()) && dto.getSedeId() != null) {
-            long adminsEnSede = usuarioRepository.countBySede_IdAndRol_Nombre(dto.getSedeId(), "ADMIN");
+        if ("ADMIN".equals(dto.rol()) && dto.sedeId() != null) {
+            long adminsEnSede = usuarioRepository.countBySede_IdAndRol_Nombre(dto.sedeId(), "ADMIN");
             if (adminsEnSede >= 1) {
                 throw new BusinessException("Solo puede existir un Administrador por sede. Esta sede ya tiene uno asignado.");
             }
         }
 
-        Rol rol = rolRepository.findByNombre(dto.getRol())
-                .orElseThrow(() -> new BusinessException("Rol no válido: " + dto.getRol()));
+        Rol rol = rolRepository.findByNombre(dto.rol())
+                .orElseThrow(() -> new BusinessException("Rol no válido: " + dto.rol()));
 
         // Reglas de licencias: Max 3 Cajeros, Max 1 Ventas por usuario principal (documento)
         Long principalId = principal.getId();
-        if ("CAJERO".equals(dto.getRol())) {
+        if ("CAJERO".equals(dto.rol())) {
             long count = usuarioRepository.countByUsuarioPrincipalIdAndRolNombre(principalId, "CAJERO");
             if (count >= MAX_CAJEROS_POR_LICENCIA) {
                 throw new BusinessException("Límite de Cajeros alcanzado (" + MAX_CAJEROS_POR_LICENCIA + "). Se requiere licencia adicional.");
             }
-        } else if ("VENTAS".equals(dto.getRol())) {
+        } else if ("VENTAS".equals(dto.rol())) {
             long count = usuarioRepository.countByUsuarioPrincipalIdAndRolNombre(principalId, "VENTAS");
             if (count >= MAX_VENTAS_POR_LICENCIA) {
                 throw new BusinessException("Límite de usuarios Ventas alcanzado (" + MAX_VENTAS_POR_LICENCIA + "). Se requiere licencia adicional.");
@@ -106,17 +108,17 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         Usuario usuario = new Usuario();
-        usuario.setUsername(dto.getUsername());
-        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
-        usuario.setNombre(dto.getNombre());
-        usuario.setApellido(dto.getApellido());
-        usuario.setCorreo(dto.getCorreo());
-        usuario.setFechaNacimiento(dto.getFechaNacimiento());
+        usuario.setUsername(dto.username());
+        usuario.setPassword(passwordEncoder.encode(dto.password()));
+        usuario.setNombre(dto.nombre());
+        usuario.setApellido(dto.apellido());
+        usuario.setCorreo(dto.correo());
+        usuario.setFechaNacimiento(dto.fechaNacimiento());
         if (esSuperusuario(principal)) {
-            if (dto.getSedeId() == null) {
+            if (dto.sedeId() == null) {
                 throw new BusinessException("La sede es obligatoria para todos los usuarios.");
             }
-            Sector sede = sectorRepository.findById(dto.getSedeId())
+            Sector sede = sectorRepository.findById(dto.sedeId())
                     .orElseThrow(() -> new BusinessException("Sede no encontrada"));
             usuario.setSede(sede);
         } else {
@@ -130,17 +132,17 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setActivo(true);
 
         List<Modulo> modulosPorDefecto;
-        if ("ADMIN".equals(dto.getRol())) {
+        if ("ADMIN".equals(dto.rol())) {
             modulosPorDefecto = moduloRepository.findByActivoTrueOrderByOrdenAsc();
         } else {
-            Set<String> codigosPorDefecto = MODULOS_POR_DEFECTO.getOrDefault(dto.getRol(), Set.of("DASHBOARD"));
+            Set<String> codigosPorDefecto = MODULOS_POR_DEFECTO.getOrDefault(dto.rol(), Set.of("DASHBOARD"));
             modulosPorDefecto = moduloRepository.findByCodigoInAndActivoTrue(codigosPorDefecto);
         }
         usuario.setModulos(new HashSet<>(modulosPorDefecto));
 
         usuarioRepository.save(usuario);
         log.info("Usuario creado por {}: {} con rol {} y {} módulos",
-                principal.getUsername(), dto.getUsername(), dto.getRol(), modulosPorDefecto.size());
+                principal.getUsername(), dto.username(), dto.rol(), modulosPorDefecto.size());
     }
 
     @Override
@@ -173,27 +175,27 @@ public class UsuarioServiceImpl implements UsuarioService {
         validarAccesoSede(u);
         boolean eraAdmin = u.getRol() != null && "ADMIN".equals(u.getRol().getNombre());
         Long sedeAnteriorId = u.getSede() != null ? u.getSede().getId() : null;
-        if (dto.getNombre() != null) u.setNombre(dto.getNombre());
-        if (dto.getApellido() != null) u.setApellido(dto.getApellido());
-        if (dto.getCorreo() != null) u.setCorreo(dto.getCorreo());
-        if (dto.getFechaNacimiento() != null) u.setFechaNacimiento(dto.getFechaNacimiento());
-        if (dto.getRol() != null && !dto.getRol().isBlank()) {
-            Rol rol = rolRepository.findByNombre(dto.getRol().trim())
-                    .orElseThrow(() -> new BusinessException("Rol no válido: " + dto.getRol()));
+        if (dto.nombre() != null) u.setNombre(dto.nombre());
+        if (dto.apellido() != null) u.setApellido(dto.apellido());
+        if (dto.correo() != null) u.setCorreo(dto.correo());
+        if (dto.fechaNacimiento() != null) u.setFechaNacimiento(dto.fechaNacimiento());
+        if (dto.rol() != null && !dto.rol().isBlank()) {
+            Rol rol = rolRepository.findByNombre(dto.rol().trim())
+                    .orElseThrow(() -> new BusinessException("Rol no válido: " + dto.rol()));
             u.setRol(rol);
         }
         Usuario actual = obtenerUsuarioActual();
         if (esSuperusuario(actual)) {
-            if (dto.getSedeId() != null) {
-                Sector sede = sectorRepository.findById(dto.getSedeId())
+            if (dto.sedeId() != null) {
+                Sector sede = sectorRepository.findById(dto.sedeId())
                         .orElseThrow(() -> new BusinessException("Sede no encontrada"));
                 u.setSede(sede);
             }
         }
         // ADMIN no puede cambiar la sede del usuario (solo SUPERUSUARIO)
-        if (dto.getActivo() != null) u.setActivo(dto.getActivo());
-        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-            u.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (dto.activo() != null) u.setActivo(dto.activo());
+        if (dto.password() != null && !dto.password().isBlank()) {
+            u.setPassword(passwordEncoder.encode(dto.password()));
         }
         if (u.getSede() == null) {
             throw new BusinessException("La sede es obligatoria para todos los usuarios.");
@@ -226,6 +228,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         validarAccesoSede(u);
         u.setActivo(activo);
         usuarioRepository.save(u);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UsuarioCorreoDTO> buscarPorCorreo(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+        return usuarioRepository.findTop10ByCorreoContainingIgnoreCaseOrderByCorreo(q.trim()).stream()
+                .filter(u -> u.getCorreo() != null && !u.getCorreo().isBlank())
+                .map(u -> new UsuarioCorreoDTO(
+                        u.getCorreo(),
+                        (Objects.requireNonNullElse(u.getNombre(), "") + " " + Objects.requireNonNullElse(u.getApellido(), "")).trim()
+                ))
+                .toList();
     }
 
     private UsuarioResponseDTO toResponseDTO(Usuario u) {

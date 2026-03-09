@@ -24,9 +24,9 @@ public class SectorServiceImpl implements SectorService {
     @Transactional
     public SectorResponseDTO crear(SectorRequestDTO dto) {
         Sector s = new Sector();
-        s.setNombreSector(dto.getNombreSector());
-        s.setTelefono(dto.getTelefono());
-        s.setDireccion(dto.getDireccion());
+        s.setNombreSector(dto.nombreSector());
+        s.setTelefono(dto.telefono());
+        s.setDireccion(dto.direccion());
         Sector guardado = repository.save(s);
         return toDTO(guardado);
     }
@@ -48,9 +48,9 @@ public class SectorServiceImpl implements SectorService {
     @Transactional
     public SectorResponseDTO actualizar(Long id, SectorRequestDTO dto) {
         Sector s = repository.findById(id).orElseThrow(() -> new BusinessException("Sector no existe"));
-        s.setNombreSector(dto.getNombreSector());
-        s.setTelefono(dto.getTelefono());
-        s.setDireccion(dto.getDireccion());
+        s.setNombreSector(dto.nombreSector());
+        s.setTelefono(dto.telefono());
+        s.setDireccion(dto.direccion());
         return toDTO(repository.save(s));
     }
 

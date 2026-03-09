@@ -23,12 +23,12 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
     @Override
     @Transactional
     public MetodoPagoResponseDTO crear(MetodoPagoRequestDTO dto) {
-        if (repository.existsByNombre(dto.getNombre())) {
+        if (repository.existsByNombre(dto.nombre())) {
             throw new BusinessException("Ya existe un método de pago con ese nombre");
         }
 
         MetodoPago mp = new MetodoPago();
-        mp.setNombre(dto.getNombre().toUpperCase());
+        mp.setNombre(dto.nombre().toUpperCase());
         mp.setActivo(true);
 
         MetodoPago guardado = repository.save(mp);

@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +44,7 @@ public class DashboardServiceImpl implements DashboardService {
                 : ventaRepo.findByFechaBetween(inicio, fin);
 
         BigDecimal total = ventas.stream()
-                .map(v -> v.getTotal() != null ? v.getTotal() : BigDecimal.ZERO)
+                .map(v -> Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new DashboardVentasDTO((long) ventas.size(), total);
@@ -64,7 +65,7 @@ public class DashboardServiceImpl implements DashboardService {
                 : ventaRepo.findByFechaBetween(inicio, fin);
 
         BigDecimal total = ventas.stream()
-                .map(v -> v.getTotal() != null ? v.getTotal() : BigDecimal.ZERO)
+                .map(v -> Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new DashboardVentasDTO((long) ventas.size(), total);
@@ -80,7 +81,7 @@ public class DashboardServiceImpl implements DashboardService {
                 ? ventaRepo.findByFechaBetweenAndSectorId(inicio, fin, effectiveId)
                 : ventaRepo.findByFechaBetween(inicio, fin);
         BigDecimal total = ventas.stream()
-                .map(v -> v.getTotal() != null ? v.getTotal() : BigDecimal.ZERO)
+                .map(v -> Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new DashboardVentasDTO((long) ventas.size(), total);
     }

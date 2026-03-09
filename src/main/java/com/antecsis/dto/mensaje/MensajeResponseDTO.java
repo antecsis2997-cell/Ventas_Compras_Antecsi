@@ -1,22 +1,15 @@
 package com.antecsis.dto.mensaje;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@AllArgsConstructor
-public class MensajeResponseDTO {
-    private Long id;
-    private String nombreReceptor;
-    private String item;
-    private String descripcion;
-    private BigDecimal precio;
-    private String estado;
-    private LocalDateTime fecha;
-    private String nombreEmisor;
-}
+public record MensajeResponseDTO(
+    Long id,
+    String nombreReceptor,
+    String item,
+    String descripcion,
+    BigDecimal precio,
+    String estado,
+    LocalDateTime fecha,
+    String nombreEmisor
+) {}

@@ -1,18 +1,11 @@
 package com.antecsis.dto.proveedor;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-@AllArgsConstructor
-public class ProveedorResponseDTO {
-    private Long id;
-    private String nombre;
-    private String ruc;
-    private String email;
-    private String telefono;
-    private String direccion;
-    private Boolean activo;
-}
+public record ProveedorResponseDTO(
+    Long id,
+    String nombre,
+    String ruc,
+    String email,
+    String telefono,
+    String direccion,
+    Boolean activo
+) {}

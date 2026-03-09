@@ -2,21 +2,16 @@ package com.antecsis.dto.proveedor;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class ProveedorRequestDTO {
+public record ProveedorRequestDTO(
     @NotBlank(message = "Nombre es obligatorio")
-    private String nombre;
+    String nombre,
 
-    private String ruc;
+    String ruc,
 
     @Email(message = "Email inválido")
-    private String email;
+    String email,
 
-    private String telefono;
-
-    private String direccion;
-}
+    String telefono,
+    String direccion
+) {}

@@ -1,14 +1,10 @@
 package com.antecsis.dto.permiso;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.Set;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class PermisoUpdateRequest {
+public record PermisoUpdateRequest(
     @NotNull
-    private Set<String> moduloCodigos;
-}
+    Set<String> moduloCodigos
+) {}

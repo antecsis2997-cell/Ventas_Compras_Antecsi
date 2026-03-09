@@ -1,29 +1,26 @@
 package com.antecsis.dto.login;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.Set;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 @Schema(description = "Usuario actual (autenticado)")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class MeResponseDTO {
+public record MeResponseDTO(
     @Schema(description = "Nombre de usuario (login)")
-    private String username;
-    private String nombre;
-    private String apellido;
+    String username,
+
+    String nombre,
+    String apellido,
+
     @Schema(description = "Nombre del rol: SUPERUSUARIO, ADMIN, CAJERO, etc.")
-    private String rolNombre;
+    String rolNombre,
+
     @Schema(description = "ID de la sede asignada (null si no tiene)")
-    private Long sedeId;
+    Long sedeId,
+
     @Schema(description = "Nombre de la sede")
-    private String sedeNombre;
+    String sedeNombre,
+
     @Schema(description = "Códigos de módulos a los que tiene acceso el usuario")
-    private Set<String> modulos;
-}
+    Set<String> modulos
+) {}

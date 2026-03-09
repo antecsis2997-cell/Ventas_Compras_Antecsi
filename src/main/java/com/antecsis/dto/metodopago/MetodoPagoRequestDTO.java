@@ -1,12 +1,8 @@
 package com.antecsis.dto.metodopago;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class MetodoPagoRequestDTO {
+public record MetodoPagoRequestDTO(
     @NotBlank(message = "Nombre es obligatorio")
-    private String nombre;
-}
+    String nombre
+) {}

@@ -3,24 +3,17 @@ package com.antecsis.dto.usuario;
 import java.time.LocalDate;
 import java.util.Set;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-@AllArgsConstructor
-public class UsuarioResponseDTO {
-    private Long id;
-    private String username;
-    private String nombre;
-    private String apellido;
-    private String correo;
-    private Integer edad;
-    private LocalDate fechaNacimiento;
-    private Long sedeId;
-    private String sedeNombre;
-    private String rolNombre;
-    private Boolean activo;
-    private Set<String> modulos;
-}
+public record UsuarioResponseDTO(
+    Long id,
+    String username,
+    String nombre,
+    String apellido,
+    String correo,
+    Integer edad,
+    LocalDate fechaNacimiento,
+    Long sedeId,
+    String sedeNombre,
+    String rolNombre,
+    Boolean activo,
+    Set<String> modulos
+) {}

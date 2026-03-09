@@ -36,7 +36,7 @@ public class PermisoServiceImpl implements PermisoService {
                 .stream()
                 .map(m -> new ModuloDTO(m.getId(), m.getCodigo(), m.getNombre(),
                         m.getDescripcion(), m.getIcono(), m.getOrden(), false))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -56,7 +56,7 @@ public class PermisoServiceImpl implements PermisoService {
                 .map(m -> new ModuloDTO(m.getId(), m.getCodigo(), m.getNombre(),
                         m.getDescripcion(), m.getIcono(), m.getOrden(),
                         codigosAsignados.contains(m.getCodigo())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

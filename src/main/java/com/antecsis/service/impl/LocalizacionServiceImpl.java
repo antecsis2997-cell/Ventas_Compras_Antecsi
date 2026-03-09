@@ -22,8 +22,8 @@ public class LocalizacionServiceImpl implements LocalizacionService {
     @Transactional
     public LocalizacionResponseDTO crear(LocalizacionRequestDTO dto) {
         Localizacion l = new Localizacion();
-        l.setDescripcionLocal(dto.getDescripcionLocal());
-        l.setImagenUrl(dto.getImagenUrl());
+        l.setDescripcionLocal(dto.descripcionLocal());
+        l.setImagenUrl(dto.imagenUrl());
         Localizacion guardado = repository.save(l);
         return toDTO(guardado);
     }
@@ -45,8 +45,8 @@ public class LocalizacionServiceImpl implements LocalizacionService {
     @Transactional
     public LocalizacionResponseDTO actualizar(Long id, LocalizacionRequestDTO dto) {
         Localizacion l = repository.findById(id).orElseThrow(() -> new BusinessException("Localizacion no existe"));
-        l.setDescripcionLocal(dto.getDescripcionLocal());
-        l.setImagenUrl(dto.getImagenUrl());
+        l.setDescripcionLocal(dto.descripcionLocal());
+        l.setImagenUrl(dto.imagenUrl());
         return toDTO(repository.save(l));
     }
 

@@ -2,20 +2,21 @@ package com.antecsis.dto.solicitudstock;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class SolicitudStockRequestDTO {
+public record SolicitudStockRequestDTO(
     @NotBlank(message = "Asunto es obligatorio")
-    private String asunto;
+    String asunto,
+
     @NotBlank(message = "Correo del remitente es obligatorio")
-    private String remitenteEmail;
-    private String nombreRemitente;
+    String remitenteEmail,
+
+    String nombreRemitente,
+
     @NotNull(message = "Producto es obligatorio")
-    private Long productoId;
-    private String unidadMedida; // UND, KILOS, GR
+    Long productoId,
+
+    String unidadMedida,
+
     @NotNull(message = "Cantidad es obligatoria")
-    private Integer cantidad;
-}
+    Integer cantidad
+) {}
