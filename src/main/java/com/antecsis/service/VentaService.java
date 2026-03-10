@@ -17,4 +17,12 @@ public interface VentaService {
     java.util.List<com.antecsis.dto.logistica.MetricasEntregasVendedorDTO> metricasEntregasPorVendedor(Long sectorId);
     VentaResponseDTO solicitarTracking(Long ventaId);
     VentaResponseDTO confirmarEntrega(Long ventaId, com.antecsis.dto.venta.ConfirmacionEntregaRequestDTO dto);
+
+    java.util.List<com.antecsis.dto.logistica.LogisticaEntregaDetalleDTO> metricasLogisticaEntregas(
+            Long sectorId,
+            Long vendedorId,
+            String distrito,
+            String provincia,
+            String pais
+    );
 }

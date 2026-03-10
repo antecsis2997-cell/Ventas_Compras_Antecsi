@@ -40,6 +40,9 @@ public record VentaRequestDTO(
     @Schema(description = "Dirección de entrega (obligatorio cuando tipoEntrega es INMEDIATA)")
     String direccionEntrega,
 
+    @Schema(description = "DNI para acumulación de puntos CMR (opcional)")
+    String dniCmr,
+
     @Schema(description = "Lista de items: productoId y cantidad. Al menos uno requerido.", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty(message = "Debe incluir al menos un item")
     List<@Valid VentaItemDTO> items

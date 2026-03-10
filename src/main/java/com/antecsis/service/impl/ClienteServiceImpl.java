@@ -56,6 +56,9 @@ public class ClienteServiceImpl implements ClienteService {
         cliente.setTipoDocumento(dto.tipoDocumento());
         cliente.setDocumento(dto.documento());
         cliente.setDireccion(dto.direccion());
+        cliente.setDistrito(dto.distrito());
+        cliente.setProvincia(dto.provincia());
+        cliente.setPais(dto.pais());
         cliente.setSector(usuario.getSede());
         cliente.setActivo(true);
 
@@ -127,6 +130,9 @@ public class ClienteServiceImpl implements ClienteService {
         cliente.setTipoDocumento(dto.tipoDocumento());
         cliente.setDocumento(dto.documento());
         cliente.setDireccion(dto.direccion());
+        cliente.setDistrito(dto.distrito());
+        cliente.setProvincia(dto.provincia());
+        cliente.setPais(dto.pais());
 
         Cliente guardado = repository.save(cliente);
         return toResponseDTO(guardado);
@@ -170,6 +176,9 @@ public class ClienteServiceImpl implements ClienteService {
                 c.getTipoDocumento(),
                 c.getDocumento(),
                 c.getDireccion(),
+                c.getDistrito(),
+                c.getProvincia(),
+                c.getPais(),
                 c.getActivo()
         );
     }

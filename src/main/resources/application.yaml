@@ -38,6 +38,11 @@ jwt:
   expiration: ${JWT_EXPIRATION:3600000}       # Access token: 1 hora (ms)
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # Refresh token: 7 días (ms)
 
+cmr:
+  base-url: ${CMR_BASE_URL:https://api.cmr.mock}
+  api-key: ${CMR_API_KEY:demo-key}
+  puntos-por-transaccion: ${CMR_PUNTOS_POR_TRANSACCION:100}
+
 springdoc:
   api-docs:
     path: /api-docs

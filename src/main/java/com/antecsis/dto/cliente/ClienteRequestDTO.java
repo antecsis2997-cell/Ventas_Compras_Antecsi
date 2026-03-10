@@ -16,5 +16,8 @@ public record ClienteRequestDTO(
 
     String tipoDocumento,
     String documento,
-    String direccion
+    String direccion,
+    String distrito,
+    String provincia,
+    String pais
 ) {}

@@ -8,5 +8,8 @@ public record ClienteResponseDTO(
     String tipoDocumento,
     String documento,
     String direccion,
+    String distrito,
+    String provincia,
+    String pais,
     Boolean activo
 ) {}

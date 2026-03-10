@@ -1,6 +1,7 @@
 package com.antecsis.controller;
 
 import com.antecsis.dto.logistica.MetricasEntregasVendedorDTO;
+import com.antecsis.dto.logistica.LogisticaEntregaDetalleDTO;
 import com.antecsis.dto.venta.ConfirmacionEntregaRequestDTO;
 import com.antecsis.dto.venta.VentaRequestDTO;
 import com.antecsis.dto.venta.VentaResponseDTO;
@@ -92,6 +93,22 @@ public class VentaController {
     public ResponseEntity<java.util.List<MetricasEntregasVendedorDTO>> metricasEntregasPorVendedor(
             @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
         return ResponseEntity.ok(service.metricasEntregasPorVendedor(sectorId));
+    }
+
+    @Operation(
+            summary = "Detalle de entregas para Logística",
+            description = "Lista de entregas (delivery) con vendedor, cliente, producto, cantidad y zona (distrito/provincia/pais)."
+    )
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA')")
+    @GetMapping("/logistica/entregas-detalle")
+    public ResponseEntity<java.util.List<LogisticaEntregaDetalleDTO>> metricasLogisticaEntregas(
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId,
+            @Parameter(description = "ID del vendedor (opcional)") @RequestParam(required = false) Long vendedorId,
+            @Parameter(description = "Filtro por distrito (contiene, opcional)") @RequestParam(required = false) String distrito,
+            @Parameter(description = "Filtro por provincia (contiene, opcional)") @RequestParam(required = false) String provincia,
+            @Parameter(description = "Filtro por país (contiene, opcional)") @RequestParam(required = false) String pais
+    ) {
+        return ResponseEntity.ok(service.metricasLogisticaEntregas(sectorId, vendedorId, distrito, provincia, pais));
     }
 
     @Operation(summary = "Solicitar tracking", description = "Genera código de tracking para seguimiento del envío.")

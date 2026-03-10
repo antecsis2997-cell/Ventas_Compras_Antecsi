@@ -32,6 +32,15 @@ public class Cliente {
 
     private String direccion;
 
+    /** Zona de ventas: distrito del cliente (para métricas de logística). */
+    private String distrito;
+
+    /** Zona de ventas: provincia del cliente (para métricas de logística). */
+    private String provincia;
+
+    /** Zona de ventas: país del cliente (para métricas de logística). */
+    private String pais;
+
     @ManyToOne
     @JoinColumn(name = "sector_id")
     private Sector sector;

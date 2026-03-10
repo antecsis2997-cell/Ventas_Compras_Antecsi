@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import com.antecsis.dto.logistica.MetricasEntregasVendedorDTO;
+import com.antecsis.dto.logistica.LogisticaEntregaDetalleDTO;
 import com.antecsis.dto.venta.ConfirmacionEntregaRequestDTO;
 
 @Slf4j
@@ -163,6 +164,15 @@ public class VentaServiceImpl implements VentaService {
         log.info("Venta #{} creada por {} - Total: {} - Cliente: {}",
                 guardada.getId(), usuario.getUsername(), total, cliente.getNombre());
 
+        // Hook para acumulación de puntos CMR (stub: solo loggea si viene DNI y el método de pago es CMR)
+        if (dto.dniCmr() != null && !dto.dniCmr().isBlank()
+                && guardada.getMetodoPago() != null
+                && "CMR".equalsIgnoreCase(guardada.getMetodoPago().getNombre())) {
+            log.info("Solicitud de acumulación de puntos CMR para DNI {} en venta #{} ({} puntos configurables).",
+                    dto.dniCmr(), guardada.getId(), "100");
+            // Aquí en el futuro se integrará la llamada real al API CMR.
+        }
+
         return toResponseDTO(guardada);
     }
 
@@ -298,6 +308,67 @@ public class VentaServiceImpl implements VentaService {
                             total
                     );
                 })
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LogisticaEntregaDetalleDTO> metricasLogisticaEntregas(
+            Long sectorId,
+            Long vendedorId,
+            String distrito,
+            String provincia,
+            String pais
+    ) {
+        List<Venta> entregadas = ventaRepo.findByRequiereDeliveryTrueAndEstadoEntrega(EstadoEntrega.ENTREGADO);
+
+        if (sectorId != null) {
+            entregadas = entregadas.stream()
+                    .filter(v -> v.getSector() != null && sectorId.equals(v.getSector().getId()))
+                    .toList();
+        }
+
+        String distritoLower = distrito != null ? distrito.trim().toLowerCase() : null;
+        String provinciaLower = provincia != null ? provincia.trim().toLowerCase() : null;
+        String paisLower = pais != null ? pais.trim().toLowerCase() : null;
+
+        return entregadas.stream()
+                .filter(v -> vendedorId == null || (v.getUsuario() != null && vendedorId.equals(v.getUsuario().getId())))
+                .flatMap(v -> v.getDetalles().stream().map(det -> {
+                    Cliente c = v.getCliente();
+                    String cDistrito = c != null && c.getDistrito() != null ? c.getDistrito() : "";
+                    String cProvincia = c != null && c.getProvincia() != null ? c.getProvincia() : "";
+                    String cPais = c != null && c.getPais() != null ? c.getPais() : "";
+
+                    if (distritoLower != null && !cDistrito.toLowerCase().contains(distritoLower)) {
+                        return null;
+                    }
+                    if (provinciaLower != null && !cProvincia.toLowerCase().contains(provinciaLower)) {
+                        return null;
+                    }
+                    if (paisLower != null && !cPais.toLowerCase().contains(paisLower)) {
+                        return null;
+                    }
+
+                    BigDecimal subtotal = det.getPrecioUnitario()
+                            .multiply(BigDecimal.valueOf(det.getCantidad()));
+
+                    return new LogisticaEntregaDetalleDTO(
+                            v.getId(),
+                            v.getFecha(),
+                            v.getUsuario() != null ? v.getUsuario().getId() : null,
+                            v.getUsuario() != null ? v.getUsuario().getUsername() : null,
+                            c != null ? c.getId() : null,
+                            c != null ? c.getNombre() : null,
+                            cDistrito,
+                            cProvincia,
+                            cPais,
+                            det.getProducto() != null ? det.getProducto().getNombre() : null,
+                            det.getCantidad(),
+                            subtotal
+                    );
+                }))
+                .filter(Objects::nonNull)
                 .toList();
     }
 
