@@ -12,6 +12,8 @@ import com.antecsis.entity.Usuario;
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 	Optional<Usuario> findByUsername(String username);
 
+	Optional<Usuario> findByCorreoIgnoreCase(String correo);
+
 	/** Para reglas de licencias: contar usuarios secundarios por rol del usuario principal. */
 	long countByUsuarioPrincipalIdAndRolNombre(Long usuarioPrincipalId, String rolNombre);
 

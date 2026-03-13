@@ -58,6 +58,10 @@ public class Usuario {
 
     private Boolean activo = true;
 
+    /** Si true, el usuario puede ver el link "Recuperar contraseña" cuando falla el login. Admin/Soporte controla esto. */
+    @Column(name = "puede_recuperar_contrasena")
+    private Boolean puedeRecuperarContrasena = true;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "usuario_modulos",

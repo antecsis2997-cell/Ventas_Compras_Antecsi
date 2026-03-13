@@ -15,5 +15,6 @@ public record UsuarioResponseDTO(
     String sedeNombre,
     String rolNombre,
     Boolean activo,
-    Set<String> modulos
+    Set<String> modulos,
+    Boolean puedeRecuperarContrasena
 ) {}

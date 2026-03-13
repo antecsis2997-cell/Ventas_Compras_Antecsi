@@ -61,7 +61,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.actualizar(id, dto));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
     @PatchMapping("/{id}/activo")
     public ResponseEntity<Void> actualizarActivo(@PathVariable Long id, @RequestBody java.util.Map<String, Boolean> body) {
         Boolean activo = body != null ? body.get("activo") : null;
@@ -69,6 +69,18 @@ public class UsuarioController {
             return ResponseEntity.badRequest().build();
         }
         usuarioService.actualizarActivo(id, activo);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
+    @PatchMapping("/{id}/puede-recuperar-contrasena")
+    public ResponseEntity<Void> actualizarPuedeRecuperarContrasena(
+            @PathVariable Long id, @RequestBody java.util.Map<String, Boolean> body) {
+        Boolean puede = body != null ? body.get("puedeRecuperarContrasena") : null;
+        if (puede == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        usuarioService.actualizarPuedeRecuperarContrasena(id, puede);
         return ResponseEntity.noContent().build();
     }
 

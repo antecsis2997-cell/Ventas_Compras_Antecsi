@@ -16,7 +16,8 @@ public interface UsuarioService {
 	UsuarioResponseDTO obtenerPorId(Long id);
 	UsuarioResponseDTO actualizar(Long id, UsuarioUpdateRequest dto);
 	void eliminar(Long id);
-    void actualizarActivo(Long id, boolean activo);
+	void actualizarActivo(Long id, boolean activo);
+	void actualizarPuedeRecuperarContrasena(Long id, boolean puedeRecuperarContrasena);
 
     /** Busca usuarios por correo (autocomplete, máx 10). Para selector de remitente en solicitudes. */
     List<UsuarioCorreoDTO> buscarPorCorreo(String q);

@@ -27,8 +27,11 @@ import com.antecsis.entity.Sector;
 import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.ModuloRepository;
+import com.antecsis.repository.PasswordResetTokenRepository;
+import com.antecsis.repository.RefreshTokenRepository;
 import com.antecsis.repository.RolRepository;
 import com.antecsis.repository.SectorRepository;
+import com.antecsis.repository.SolicitudRecuperacionRepository;
 import com.antecsis.repository.UsuarioRepository;
 import com.antecsis.service.UsuarioService;
 
@@ -41,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UsuarioServiceImpl implements UsuarioService {
 
     /** Documento: Usuario Secundario -> Cajero, Ventas, Logística, Administración. */
-    private static final Set<String> ROLES_PERMITIDOS = Set.of("ADMIN", "CAJERO", "ALMACENERO", "VENTAS", "LOGISTICA", "ADMINISTRACION");
+    private static final Set<String> ROLES_PERMITIDOS = Set.of("ADMIN", "CAJERO", "ALMACENERO", "VENTAS", "LOGISTICA", "ADMINISTRACION", "SOPORTE");
 
     private static final int MAX_CAJEROS_POR_LICENCIA = 3;
     private static final int MAX_VENTAS_POR_LICENCIA = 1;
@@ -59,7 +62,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         "LOGISTICA", Set.of("DASHBOARD", "INVENTARIO", "COMPRAS", "PROVEEDORES",
                 "SOLICITUDES_STOCK", "SOLICITUDES_PRODUCTO", "HISTORIAL_PEDIDOS", "LOGISTICA_ENTREGAS"),
         "ADMINISTRACION", Set.of("DASHBOARD", "REPORTES", "VENTAS", "COMPRAS",
-                "CLIENTES", "PROVEEDORES", "MENSAJES")
+                "CLIENTES", "PROVEEDORES", "MENSAJES"),
+        "SOPORTE", Set.of("DASHBOARD", "CLIENTES", "PRODUCTOS", "REPORTES", "MENSAJES", "VENTAS")
     );
 
     private final UsuarioRepository usuarioRepository;
@@ -67,6 +71,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final SectorRepository sectorRepository;
     private final ModuloRepository moduloRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final SolicitudRecuperacionRepository solicitudRecuperacionRepository;
 
     @Override
     @Transactional
@@ -78,7 +85,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         if (!ROLES_PERMITIDOS.contains(dto.rol())) {
-            throw new BusinessException("Rol no permitido. Use: ADMIN, CAJERO, ALMACENERO, VENTAS, LOGISTICA o ADMINISTRACION");
+            throw new BusinessException("Rol no permitido. Use: ADMIN, CAJERO, ALMACENERO, VENTAS, LOGISTICA, ADMINISTRACION o SOPORTE");
         }
         if (esAdmin(principal) && "ADMIN".equals(dto.rol())) {
             throw new BusinessException("Solo puede crear usuarios de su punto (Cajero, Almacenero, Ventas, etc.). No puede crear otro Administrador.");
@@ -194,6 +201,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
         // ADMIN no puede cambiar la sede del usuario (solo SUPERUSUARIO)
         if (dto.activo() != null) u.setActivo(dto.activo());
+        if (dto.puedeRecuperarContrasena() != null) u.setPuedeRecuperarContrasena(dto.puedeRecuperarContrasena());
         if (dto.password() != null && !dto.password().isBlank()) {
             u.setPassword(passwordEncoder.encode(dto.password()));
         }
@@ -213,10 +221,24 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
+    public void actualizarPuedeRecuperarContrasena(Long id, boolean puedeRecuperarContrasena) {
+        Usuario u = usuarioRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        validarAccesoAdminOSoporte(u);
+        u.setPuedeRecuperarContrasena(puedeRecuperarContrasena);
+        usuarioRepository.save(u);
+    }
+
+    @Override
+    @Transactional
     public void eliminar(Long id) {
         Usuario u = usuarioRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
         validarAccesoSede(u);
+        Long usuarioId = u.getId();
+        refreshTokenRepository.deleteByUsuarioId(usuarioId);
+        passwordResetTokenRepository.deleteByUsuarioId(usuarioId);
+        solicitudRecuperacionRepository.deleteByUsuario_Id(usuarioId);
         usuarioRepository.delete(u);
     }
 
@@ -268,7 +290,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 sedeNombre,
                 rolNombre,
                 u.getActivo(),
-                modulos
+                modulos,
+                Boolean.TRUE.equals(u.getPuedeRecuperarContrasena())
         );
     }
 
@@ -286,6 +309,23 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private boolean esAdmin(Usuario u) {
         return u != null && u.getRol() != null && "ADMIN".equals(u.getRol().getNombre());
+    }
+
+    /** ADMIN/SOPORTE/SUPERUSUARIO pueden cambiar puedeRecuperarContrasena de usuarios de su sector. */
+    private void validarAccesoAdminOSoporte(Usuario target) {
+        Usuario actual = obtenerUsuarioActual();
+        if (target.getId().equals(actual.getId())) {
+            throw new BusinessException("No puede cambiar su propio permiso de recuperación");
+        }
+        String rol = actual.getRol() != null ? actual.getRol().getNombre() : null;
+        if ("SUPERUSUARIO".equals(rol)) return;
+        if ("ADMIN".equals(rol) || "SOPORTE".equals(rol)) {
+            if (actual.getSede() == null) throw new BusinessException("No tiene sede asignada");
+            if (target.getSede() == null || !target.getSede().getId().equals(actual.getSede().getId()))
+                throw new BusinessException("Solo puede gestionar usuarios de su sector");
+            return;
+        }
+        throw new BusinessException("Sin permiso para esta operación");
     }
 
     /** Nadie puede editar/desactivar/eliminar su propio usuario. ADMIN solo puede tocar usuarios de su misma sede. */

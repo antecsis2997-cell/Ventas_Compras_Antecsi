@@ -11,5 +11,7 @@ public record UsuarioUpdateRequest(
     Long sedeId,
     Boolean activo,
     /** Si se envía y no está vacío, se actualiza la contraseña. */
-    String password
+    String password,
+    /** Si true, el usuario verá el link "Recuperar contraseña" cuando falle el login. */
+    Boolean puedeRecuperarContrasena
 ) {}

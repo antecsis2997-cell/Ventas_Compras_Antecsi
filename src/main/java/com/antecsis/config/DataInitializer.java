@@ -49,6 +49,8 @@ public class DataInitializer {
             crearRolSiNoExiste(rolRepository, "VENTAS");
             crearRolSiNoExiste(rolRepository, "LOGISTICA");
             crearRolSiNoExiste(rolRepository, "ADMINISTRACION");
+            crearRolSiNoExiste(rolRepository, "SOPORTE");
+
 
             // ── Superusuario (dueño del software): único que puede crear admins y cajeros ──
             if (usuarioRepository.findByUsername("superadmin").isEmpty()) {
