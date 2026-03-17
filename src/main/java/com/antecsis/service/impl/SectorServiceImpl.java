@@ -27,6 +27,8 @@ public class SectorServiceImpl implements SectorService {
         s.setNombreSector(dto.nombreSector());
         s.setTelefono(dto.telefono());
         s.setDireccion(dto.direccion());
+        s.setPrefijoBoleta(blankToNull(dto.prefijoBoleta()));
+        s.setPrefijoFactura(blankToNull(dto.prefijoFactura()));
         Sector guardado = repository.save(s);
         return toDTO(guardado);
     }
@@ -51,6 +53,8 @@ public class SectorServiceImpl implements SectorService {
         s.setNombreSector(dto.nombreSector());
         s.setTelefono(dto.telefono());
         s.setDireccion(dto.direccion());
+        s.setPrefijoBoleta(blankToNull(dto.prefijoBoleta()));
+        s.setPrefijoFactura(blankToNull(dto.prefijoFactura()));
         return toDTO(repository.save(s));
     }
 
@@ -64,7 +68,18 @@ public class SectorServiceImpl implements SectorService {
         repository.deleteById(id);
     }
 
+    private static String blankToNull(String value) {
+        return value != null && !value.isBlank() ? value.trim() : null;
+    }
+
     private SectorResponseDTO toDTO(Sector s) {
-        return new SectorResponseDTO(s.getId(), s.getNombreSector(), s.getTelefono(), s.getDireccion());
+        return new SectorResponseDTO(
+                s.getId(),
+                s.getNombreSector(),
+                s.getTelefono(),
+                s.getDireccion(),
+                s.getPrefijoBoleta(),
+                s.getPrefijoFactura()
+        );
     }
 }

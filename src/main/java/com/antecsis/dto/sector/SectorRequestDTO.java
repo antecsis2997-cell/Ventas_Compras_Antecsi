@@ -7,5 +7,11 @@ public record SectorRequestDTO(
     String nombreSector,
 
     String telefono,
-    String direccion
+    String direccion,
+
+    /** Prefijo/serie para boletas (ej. B137). Opcional; si está configurado el número se genera automáticamente. */
+    String prefijoBoleta,
+
+    /** Prefijo/serie para facturas (ej. F137). Opcional. */
+    String prefijoFactura
 ) {}

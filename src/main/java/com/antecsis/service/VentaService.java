@@ -8,6 +8,8 @@ import com.antecsis.dto.venta.VentaResponseDTO;
 
 public interface VentaService {
     VentaResponseDTO crear(VentaRequestDTO dto);
+    /** Vista previa del siguiente número de comprobante para la sede del usuario (no consume la secuencia). */
+    String siguienteNumeroComprobantePreview(String tipoDocumento);
     Page<VentaResponseDTO> listar(Pageable pageable, Long sectorId);
     VentaResponseDTO obtenerPorId(Long id);
     VentaResponseDTO anular(Long id);

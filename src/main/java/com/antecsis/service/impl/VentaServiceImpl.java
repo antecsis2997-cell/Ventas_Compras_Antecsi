@@ -8,13 +8,16 @@ import com.antecsis.entity.TipoMovimiento;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.*;
 import com.antecsis.service.InventarioService;
+import com.antecsis.service.SecuenciaComprobanteService;
 import com.antecsis.service.VentaService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +45,25 @@ public class VentaServiceImpl implements VentaService {
     private final MetodoPagoRepository metodoPagoRepo;
     private final HistorialPedidoRepository historialPedidoRepo;
     private final InventarioService inventarioService;
+    private final SecuenciaComprobanteService secuenciaComprobanteService;
+    private final SectorRepository sectorRepo;
+
+    @Override
+    @Transactional(readOnly = true)
+    public String siguienteNumeroComprobantePreview(String tipoDocumento) {
+        if (tipoDocumento == null || tipoDocumento.isBlank()) return null;
+        TipoDocumentoVenta tipo;
+        try {
+            tipo = TipoDocumentoVenta.valueOf(tipoDocumento.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        Usuario usuario = obtenerUsuarioAutenticado();
+        Sector sector = usuario.getSede();
+        if (sector == null || sector.getId() == null) return null;
+        sector = sectorRepo.findById(sector.getId()).orElse(sector);
+        return secuenciaComprobanteService.siguienteNumeroPreview(sector, tipo);
+    }
 
     @Override
     @Transactional
@@ -97,7 +119,15 @@ public class VentaServiceImpl implements VentaService {
                 throw new BusinessException("Tipo de documento inválido. Use FACTURA o BOLETA.");
             }
         }
-        venta.setNumeroDocumento(dto.numeroDocumento());
+        // Si el sector tiene prefijo configurado (ej. B101), generar correlativo automático (B101-00000001, ...)
+        Sector sectorParaNumero = venta.getSector();
+        if (sectorParaNumero != null && sectorParaNumero.getId() != null) {
+            sectorParaNumero = sectorRepo.findById(sectorParaNumero.getId()).orElse(sectorParaNumero);
+        }
+        String numeroGenerado = sectorParaNumero != null && venta.getTipoDocumento() != null
+                ? secuenciaComprobanteService.siguienteNumero(sectorParaNumero, venta.getTipoDocumento())
+                : null;
+        venta.setNumeroDocumento(numeroGenerado != null ? numeroGenerado : dto.numeroDocumento());
 
         if (dto.metodoPagoId() != null) {
             MetodoPago mp = metodoPagoRepo.findById(dto.metodoPagoId())
@@ -179,11 +209,12 @@ public class VentaServiceImpl implements VentaService {
     @Override
     @Transactional(readOnly = true)
     public Page<VentaResponseDTO> listar(Pageable pageable, Long sectorId) {
+        Pageable conOrden = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "fecha"));
         Long effectiveSectorId = resolverSectorId(sectorId);
         if (effectiveSectorId != null) {
-            return ventaRepo.findBySectorId(effectiveSectorId, pageable).map(this::toResponseDTO);
+            return ventaRepo.findBySectorId(effectiveSectorId, conOrden).map(this::toResponseDTO);
         }
-        return ventaRepo.findAll(pageable).map(this::toResponseDTO);
+        return ventaRepo.findAll(conOrden).map(this::toResponseDTO);
     }
 
     @Override

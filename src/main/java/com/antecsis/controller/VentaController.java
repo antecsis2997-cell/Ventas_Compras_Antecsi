@@ -42,6 +42,15 @@ public class VentaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(dto));
     }
 
+    @Operation(summary = "Vista previa del siguiente número de comprobante", description = "Devuelve el número que se asignará al registrar (ej. B101-00000003). No consume la secuencia.")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
+    @GetMapping("/siguiente-numero-comprobante")
+    public ResponseEntity<java.util.Map<String, String>> siguienteNumeroComprobante(
+            @Parameter(description = "BOLETA o FACTURA") @RequestParam String tipoDocumento) {
+        String numero = service.siguienteNumeroComprobantePreview(tipoDocumento);
+        return ResponseEntity.ok(java.util.Map.of("siguienteNumero", numero != null ? numero : ""));
+    }
+
     @Operation(summary = "Listar ventas", description = "Listado paginado. Opcionalmente filtra por sector. Requiere CAJERO, ADMIN o SUPERUSUARIO.")
     @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping
