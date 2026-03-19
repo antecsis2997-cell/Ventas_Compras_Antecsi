@@ -135,4 +135,23 @@ public class VentaController {
             @jakarta.validation.Valid @RequestBody ConfirmacionEntregaRequestDTO dto) {
         return ResponseEntity.ok(service.confirmarEntrega(id, dto));
     }
+
+    @Operation(
+        summary = "Compras calificadas de un cliente",
+        description = "Devuelve cuántas compras mayores a 50 soles tiene acumuladas el cliente en el sector del usuario autenticado. Útil para mostrar el progreso de la promoción antes de registrar una venta.")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO','VENTAS')")
+    @GetMapping("/clientes/{clienteId}/compras-calificadas")
+    public ResponseEntity<java.util.Map<String, Object>> comprasCalificadas(
+            @Parameter(description = "ID del cliente") @PathVariable Long clienteId) {
+        long count = service.contarComprasCalificadas(clienteId);
+        // visitaActual = count + 1. Descuento si visitaActual % 10 == 0, es decir count % 10 == 9.
+        boolean proximaConDescuento = (count % 10) == 9;
+        // Cuántas compras calificadas más (después de esta) hacen falta para el siguiente descuento.
+        long faltanParaDescuento = proximaConDescuento ? 0L : (9 - (count % 10));
+        return ResponseEntity.ok(java.util.Map.of(
+            "comprasCalificadas", count,
+            "proximaDescuento", proximaConDescuento,
+            "faltanParaDescuento", faltanParaDescuento
+        ));
+    }
 }

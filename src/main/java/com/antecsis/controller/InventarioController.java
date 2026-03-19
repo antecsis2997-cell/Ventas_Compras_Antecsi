@@ -51,6 +51,23 @@ public class InventarioController {
         return ResponseEntity.ok(service.stockBajoPorAlerta(pageable, sectorId));
     }
 
+    @Operation(summary = "Insumos (materiales) en inventario")
+    @GetMapping("/insumos")
+    public ResponseEntity<Page<InventarioResponseDTO>> listarInsumosTodo(
+            Pageable pageable,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.listarInsumosTodo(pageable, sectorId));
+    }
+
+    @Operation(summary = "Insumos con stock bajo (por umbral global)")
+    @GetMapping("/insumos/stock-bajo")
+    public ResponseEntity<Page<InventarioResponseDTO>> stockBajoInsumos(
+            @RequestParam(defaultValue = "5") Integer limite,
+            Pageable pageable,
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.stockBajoInsumos(limite, pageable, sectorId));
+    }
+
     @Operation(summary = "Historial de movimientos", description = "Movimientos de inventario ordenados por fecha descendente. Filtrable por producto.")
     @GetMapping("/movimientos")
     public ResponseEntity<Page<MovimientoResponseDTO>> movimientos(

@@ -36,5 +36,7 @@ public record ProductoRequestDTO(
     Integer stockMinimoAlerta,
     String tipo,
     String marca,
-    BigDecimal cantidad
+    BigDecimal cantidad,
+    /** true = insumo (materia prima). false = producto vendible. */
+    Boolean esInsumo
 ) {}

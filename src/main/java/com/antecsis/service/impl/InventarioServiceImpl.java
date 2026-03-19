@@ -61,6 +61,27 @@ public class InventarioServiceImpl implements InventarioService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<InventarioResponseDTO> listarInsumosTodo(Pageable pageable, Long sectorId) {
+        Long effectiveId = resolverSectorId(sectorId);
+        if (effectiveId != null) {
+            return productoRepo.findBySectorIdAndEsInsumo(effectiveId, true, pageable).map(this::toDTO);
+        }
+        return productoRepo.findByEsInsumo(true, pageable).map(this::toDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<InventarioResponseDTO> stockBajoInsumos(Integer limite, Pageable pageable, Long sectorId) {
+        Long effectiveId = resolverSectorId(sectorId);
+        if (effectiveId != null) {
+            return productoRepo.findBySectorIdAndEsInsumoAndStockLessThanEqual(effectiveId, true, limite, pageable)
+                    .map(this::toDTO);
+        }
+        return productoRepo.findByEsInsumoAndStockLessThanEqual(true, limite, pageable).map(this::toDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<MovimientoResponseDTO> listarMovimientos(Pageable pageable, Long productoId) {
         Long sectorId = obtenerSectorIdAutenticado();
         Page<MovimientoInventario> page;
@@ -124,6 +145,7 @@ public class InventarioServiceImpl implements InventarioService {
     }
 
     private InventarioResponseDTO toDTO(Producto p) {
+        boolean activo = Boolean.TRUE.equals(p.getActivo());
         return new InventarioResponseDTO(
                 p.getId(),
                 p.getCodigo(),
@@ -136,7 +158,9 @@ public class InventarioServiceImpl implements InventarioService {
                 p.getStockMinimoAlerta(),
                 p.getSector() != null ? p.getSector().getId() : null,
                 p.getSector() != null ? p.getSector().getNombreSector() : null,
-                p.getImagenUrl()
+                p.getImagenUrl(),
+                p.getActivo(),
+                activo ? "ACTIVO" : "INACTIVO"
         );
     }
 

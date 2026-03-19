@@ -67,6 +67,9 @@ public class CompraServiceImpl implements CompraService {
             Producto producto = productoRepo.findById(item.productoId())
                     .orElseThrow(() -> new BusinessException("Producto no existe: ID " + item.productoId()));
             verificarAccesoSector(producto.getSector());
+            if (Boolean.TRUE.equals(producto.getEsInsumo())) {
+                throw new BusinessException("No se puede comprar un insumo desde Compras. Use la sección de insumos/recetas.");
+            }
 
             int stockAnterior = producto.getStock();
             producto.setStock(stockAnterior + item.cantidad());

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface VentaRepository extends JpaRepository<Venta, Long> {
@@ -47,4 +48,43 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
         """)
     Page<Venta> findEntregasConHistorialBySector(@Param("tipo") TipoEntrega tipo, @Param("sectorId") Long sectorId,
             @Param("pendiente") EstadoVenta pendiente, @Param("entregado") EstadoEntrega entregado, Pageable pageable);
+
+    @Query("""
+        SELECT COUNT(v) FROM Venta v
+        WHERE v.cliente.id = :clienteId
+          AND (:sectorId IS NULL OR v.sector.id = :sectorId)
+          AND v.estado <> :estadoExcluido
+          AND COALESCE(v.totalBruto, v.total) > :minTotal
+        """)
+    long countComprasCalificadasParaPromocion(
+            @Param("clienteId") Long clienteId,
+            @Param("sectorId") Long sectorId,
+            @Param("minTotal") BigDecimal minTotal,
+            @Param("estadoExcluido") EstadoVenta estadoExcluido);
+
+    @Query("""
+        SELECT COUNT(v)
+        FROM Venta v
+        WHERE v.requiereDelivery = true
+          AND v.estado = :estadoVenta
+          AND (:sectorId IS NULL OR v.sector.id = :sectorId)
+        """)
+    long countRequiereDeliveryByEstadoVenta(
+            @Param("sectorId") Long sectorId,
+            @Param("estadoVenta") EstadoVenta estadoVenta
+    );
+
+    @Query("""
+        SELECT COUNT(v)
+        FROM Venta v
+        WHERE v.requiereDelivery = true
+          AND v.estado = :estadoVenta
+          AND v.estadoEntrega = :estadoEntrega
+          AND (:sectorId IS NULL OR v.sector.id = :sectorId)
+        """)
+    long countRequiereDeliveryByEstadoEntrega(
+            @Param("sectorId") Long sectorId,
+            @Param("estadoVenta") EstadoVenta estadoVenta,
+            @Param("estadoEntrega") EstadoEntrega estadoEntrega
+    );
 }

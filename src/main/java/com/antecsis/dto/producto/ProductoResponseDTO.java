@@ -19,5 +19,6 @@ public record ProductoResponseDTO(
     String tipo,
     String marca,
     BigDecimal cantidad,
-    Boolean activo
+    Boolean activo,
+    Boolean esInsumo
 ) {}

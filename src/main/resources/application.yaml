@@ -61,6 +61,14 @@ cmr:
   api-key: ${CMR_API_KEY:demo-key}
   puntos-por-transaccion: ${CMR_PUNTOS_POR_TRANSACCION:100}
 
+payu:
+  sandbox-url: ${PAYU_SANDBOX_URL:https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi}
+  api-login: ${PAYU_API_LOGIN:pRRXKOl8ikMmt9u}
+  api-key: ${PAYU_API_KEY:4Vj8eK4rloUd272L48hsrarnUA}
+  account-id: ${PAYU_ACCOUNT_ID:512323}
+  merchant-id: ${PAYU_MERCHANT_ID:508029}
+  test: ${PAYU_TEST:true}
+
 springdoc:
   api-docs:
     path: /api-docs

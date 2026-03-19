@@ -15,6 +15,8 @@ public interface InventarioService {
     Page<InventarioResponseDTO> listarTodo(Pageable pageable, Long sectorId);
     Page<InventarioResponseDTO> stockBajo(Integer limite, Pageable pageable, Long sectorId);
     Page<InventarioResponseDTO> stockBajoPorAlerta(Pageable pageable, Long sectorId);
+    Page<InventarioResponseDTO> listarInsumosTodo(Pageable pageable, Long sectorId);
+    Page<InventarioResponseDTO> stockBajoInsumos(Integer limite, Pageable pageable, Long sectorId);
     Page<MovimientoResponseDTO> listarMovimientos(Pageable pageable, Long productoId);
     MovimientoResponseDTO ajustarStock(AjusteStockRequestDTO dto);
     void registrarMovimiento(Producto producto, TipoMovimiento tipo, int cantidad,

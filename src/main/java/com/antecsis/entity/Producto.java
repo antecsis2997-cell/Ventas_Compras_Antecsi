@@ -79,5 +79,9 @@ public class Producto {
 	@Column(precision = 12, scale = 2)
 	private BigDecimal cantidad;
 
+	/** true si el item es un insumo (materia prima); false si es un producto vendible. */
+	@Column(name = "es_insumo", nullable = false, columnDefinition = "boolean default false")
+	private Boolean esInsumo = false;
+
 	private Boolean activo = true;
 }

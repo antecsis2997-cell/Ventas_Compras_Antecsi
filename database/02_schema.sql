@@ -93,6 +93,13 @@ DO $$ BEGIN
   END IF;
 END $$;
 
+-- Migración: marcar si un producto es insumo (materia prima) para recetas
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='productos' AND column_name='es_insumo') THEN
+    ALTER TABLE public.productos ADD COLUMN es_insumo BOOLEAN NOT NULL DEFAULT false;
+  END IF;
+END $$;
+
 -- 6. CLIENTES (por bodega - cada bodega tiene su propia cartera)
 CREATE TABLE IF NOT EXISTS public.clientes (
     id BIGSERIAL PRIMARY KEY,
@@ -157,6 +164,26 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='con_cuotas') THEN
     ALTER TABLE public.ventas ADD COLUMN con_cuotas BOOLEAN;
+  END IF;
+END $$;
+
+-- Migración: total sin aplicar descuentos/promociones (para reglas basadas en umbrales)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='total_bruto') THEN
+    ALTER TABLE public.ventas ADD COLUMN total_bruto DECIMAL(12, 2);
+  END IF;
+END $$;
+
+-- Migración: campos de descuento por promoción de visitas
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='descuento_promocion_visitas_monto') THEN
+    ALTER TABLE public.ventas ADD COLUMN descuento_promocion_visitas_monto DECIMAL(12, 2);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ventas' AND column_name='descuento_promocion_visitas_porcentaje') THEN
+    ALTER TABLE public.ventas ADD COLUMN descuento_promocion_visitas_porcentaje DECIMAL(5, 2);
   END IF;
 END $$;
 
@@ -297,3 +324,39 @@ CREATE INDEX IF NOT EXISTS idx_mov_inv_producto ON public.movimientos_inventario
 CREATE INDEX IF NOT EXISTS idx_mov_inv_sector ON public.movimientos_inventario(sector_id);
 CREATE INDEX IF NOT EXISTS idx_mov_inv_fecha ON public.movimientos_inventario(fecha);
 CREATE INDEX IF NOT EXISTS idx_mov_inv_tipo ON public.movimientos_inventario(tipo);
+
+-- 15. RECETAS (BOM) y CONVERSIONES (insumos -> productos)
+CREATE TABLE IF NOT EXISTS public.recetas (
+    id BIGSERIAL PRIMARY KEY,
+    sector_id BIGINT NOT NULL REFERENCES public.sectores(id),
+    producto_salida_id BIGINT NOT NULL REFERENCES public.productos(id),
+    cantidad_salida_base INTEGER NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE INDEX IF NOT EXISTS idx_recetas_sector ON public.recetas(sector_id);
+CREATE INDEX IF NOT EXISTS idx_recetas_producto_salida ON public.recetas(producto_salida_id);
+
+CREATE TABLE IF NOT EXISTS public.receta_detalle (
+    id BIGSERIAL PRIMARY KEY,
+    receta_id BIGINT NOT NULL REFERENCES public.recetas(id) ON DELETE CASCADE,
+    insumo_id BIGINT NOT NULL REFERENCES public.productos(id),
+    cantidad_insumo_base INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_receta_detalle_receta ON public.receta_detalle(receta_id);
+CREATE INDEX IF NOT EXISTS idx_receta_detalle_insumo ON public.receta_detalle(insumo_id);
+
+CREATE TABLE IF NOT EXISTS public.conversiones (
+    id BIGSERIAL PRIMARY KEY,
+    receta_id BIGINT NOT NULL REFERENCES public.recetas(id),
+    sector_id BIGINT NOT NULL REFERENCES public.sectores(id),
+    usuario_id BIGINT NOT NULL REFERENCES public.usuarios(id),
+    cantidad_producir INTEGER NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',
+    fecha TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversiones_sector ON public.conversiones(sector_id);
+CREATE INDEX IF NOT EXISTS idx_conversiones_receta ON public.conversiones(receta_id);
+CREATE INDEX IF NOT EXISTS idx_conversiones_fecha ON public.conversiones(fecha);

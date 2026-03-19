@@ -1,8 +1,10 @@
 package com.antecsis.service.impl;
 
 import com.antecsis.dto.DashboardPedidosEstadoDTO;
+import com.antecsis.dto.DashboardPedidosPendientesDeliveryDTO;
 import com.antecsis.dto.DashboardVentasDTO;
 import com.antecsis.dto.producto.ProductoMasVendidoDTO;
+import com.antecsis.entity.EstadoEntrega;
 import com.antecsis.entity.EstadoVenta;
 import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
@@ -21,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -46,8 +49,27 @@ public class DashboardServiceImpl implements DashboardService {
         BigDecimal total = ventas.stream()
                 .map(v -> Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long totalVentas = ventas.size();
+        long completadas = ventas.stream().filter(v -> v.getEstado() == EstadoVenta.COMPLETADA).count();
+        long anuladas = ventas.stream().filter(v -> v.getEstado() == EstadoVenta.ANULADA).count();
+        long pendientes = totalVentas - completadas - anuladas;
 
-        return new DashboardVentasDTO((long) ventas.size(), total);
+        List<String> labels = new ArrayList<>();
+        List<Double> valores = new ArrayList<>();
+        for (int h = 0; h < 24; h++) {
+            labels.add(String.format("%02d:00", h));
+            valores.add(0.0);
+        }
+        double[] buckets = new double[24];
+        for (var v : ventas) {
+            int hour = v.getFecha() != null ? v.getFecha().getHour() : 0;
+            buckets[hour] += Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO).doubleValue();
+        }
+        for (int h = 0; h < 24; h++) {
+            valores.set(h, buckets[h]);
+        }
+
+        return new DashboardVentasDTO(totalVentas, total, labels, valores, completadas, anuladas, pendientes);
     }
 
     @Override
@@ -67,8 +89,32 @@ public class DashboardServiceImpl implements DashboardService {
         BigDecimal total = ventas.stream()
                 .map(v -> Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long totalVentas = ventas.size();
+        long completadas = ventas.stream().filter(v -> v.getEstado() == EstadoVenta.COMPLETADA).count();
+        long anuladas = ventas.stream().filter(v -> v.getEstado() == EstadoVenta.ANULADA).count();
+        long pendientes = totalVentas - completadas - anuladas;
 
-        return new DashboardVentasDTO((long) ventas.size(), total);
+        int diasMes = inicioMes.lengthOfMonth();
+        List<String> labels = new ArrayList<>();
+        List<Double> valores = new ArrayList<>();
+        for (int d = 1; d <= diasMes; d++) {
+            labels.add(String.valueOf(d));
+            valores.add(0.0);
+        }
+
+        double[] buckets = new double[diasMes];
+        for (var v : ventas) {
+            if (v.getFecha() == null) continue;
+            int dayIndex = v.getFecha().getDayOfMonth() - 1;
+            if (dayIndex >= 0 && dayIndex < diasMes) {
+                buckets[dayIndex] += Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO).doubleValue();
+            }
+        }
+        for (int d = 0; d < diasMes; d++) {
+            valores.set(d, buckets[d]);
+        }
+
+        return new DashboardVentasDTO(totalVentas, total, labels, valores, completadas, anuladas, pendientes);
     }
 
     @Override
@@ -83,7 +129,32 @@ public class DashboardServiceImpl implements DashboardService {
         BigDecimal total = ventas.stream()
                 .map(v -> Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new DashboardVentasDTO((long) ventas.size(), total);
+        long totalVentas = ventas.size();
+        long completadas = ventas.stream().filter(v -> v.getEstado() == EstadoVenta.COMPLETADA).count();
+        long anuladas = ventas.stream().filter(v -> v.getEstado() == EstadoVenta.ANULADA).count();
+        long pendientes = totalVentas - completadas - anuladas;
+
+        List<String> labels = new ArrayList<>();
+        List<Double> valores = new ArrayList<>();
+        String[] meses = new String[]{"Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"};
+        for (int m = 1; m <= 12; m++) {
+            labels.add(meses[m - 1]);
+            valores.add(0.0);
+        }
+
+        double[] buckets = new double[12];
+        for (var v : ventas) {
+            if (v.getFecha() == null) continue;
+            int monthIndex = v.getFecha().getMonthValue() - 1;
+            if (monthIndex >= 0 && monthIndex < 12) {
+                buckets[monthIndex] += Objects.requireNonNullElse(v.getTotal(), BigDecimal.ZERO).doubleValue();
+            }
+        }
+        for (int m = 0; m < 12; m++) {
+            valores.set(m, buckets[m]);
+        }
+
+        return new DashboardVentasDTO(totalVentas, total, labels, valores, completadas, anuladas, pendientes);
     }
 
     @Override
@@ -126,6 +197,19 @@ public class DashboardServiceImpl implements DashboardService {
             anulados = ventaRepo.countByEstadoAndFechaBetween(EstadoVenta.ANULADA, inicio, fin);
         }
         return new DashboardPedidosEstadoDTO(facturados, anulados);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DashboardPedidosPendientesDeliveryDTO pedidosPendientesDelivery(Long sectorId) {
+        Long effectiveId = resolverSectorId(sectorId);
+
+        long totalRequiereDelivery = ventaRepo.countRequiereDeliveryByEstadoVenta(effectiveId, EstadoVenta.PENDIENTE);
+        long pendientes = ventaRepo.countRequiereDeliveryByEstadoEntrega(effectiveId, EstadoVenta.PENDIENTE, EstadoEntrega.PENDIENTE);
+        long enCamino = ventaRepo.countRequiereDeliveryByEstadoEntrega(effectiveId, EstadoVenta.PENDIENTE, EstadoEntrega.EN_CAMINO);
+        long entregados = ventaRepo.countRequiereDeliveryByEstadoEntrega(effectiveId, EstadoVenta.COMPLETADA, EstadoEntrega.ENTREGADO);
+
+        return new DashboardPedidosPendientesDeliveryDTO(totalRequiereDelivery, pendientes, enCamino, entregados);
     }
 
     private Long resolverSectorId(Long sectorIdParam) {

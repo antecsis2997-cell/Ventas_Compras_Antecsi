@@ -1,6 +1,7 @@
 package com.antecsis.controller;
 
 import com.antecsis.dto.DashboardPedidosEstadoDTO;
+import com.antecsis.dto.DashboardPedidosPendientesDeliveryDTO;
 import com.antecsis.dto.DashboardVentasDTO;
 import com.antecsis.dto.producto.ProductoMasVendidoDTO;
 import com.antecsis.service.DashboardService;
@@ -65,5 +66,12 @@ public class DashboardController {
             @Parameter(description = "Mes (1-12)") @RequestParam int month,
             @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
         return ResponseEntity.ok(service.pedidosFacturadosYAnuladosPorMes(year, month, sectorId));
+    }
+
+    @Operation(summary = "Informe de órdenes pendientes por delivery")
+    @GetMapping("/pedidos-pendientes-delivery")
+    public ResponseEntity<DashboardPedidosPendientesDeliveryDTO> pedidosPendientesDelivery(
+            @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
+        return ResponseEntity.ok(service.pedidosPendientesDelivery(sectorId));
     }
 }

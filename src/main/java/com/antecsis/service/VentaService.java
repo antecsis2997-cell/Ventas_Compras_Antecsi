@@ -27,4 +27,7 @@ public interface VentaService {
             String provincia,
             String pais
     );
+
+    /** Cuenta las compras mayores a 50 soles que el cliente tiene en el sector del usuario autenticado. */
+    long contarComprasCalificadas(Long clienteId);
 }

@@ -3,10 +3,27 @@ package com.antecsis.service.impl;
 import com.antecsis.dto.venta.VentaItemDTO;
 import com.antecsis.dto.venta.VentaRequestDTO;
 import com.antecsis.dto.venta.VentaResponseDTO;
-import com.antecsis.entity.*;
+import com.antecsis.entity.Cliente;
+import com.antecsis.entity.EstadoEntrega;
+import com.antecsis.entity.EstadoVenta;
+import com.antecsis.entity.HistorialPedido;
+import com.antecsis.entity.MetodoPago;
+import com.antecsis.entity.Producto;
+import com.antecsis.entity.Sector;
+import com.antecsis.entity.TipoDocumentoVenta;
+import com.antecsis.entity.TipoEntrega;
 import com.antecsis.entity.TipoMovimiento;
+import com.antecsis.entity.Usuario;
+import com.antecsis.entity.Venta;
+import com.antecsis.entity.VentaDetalle;
 import com.antecsis.exception.BusinessException;
-import com.antecsis.repository.*;
+import com.antecsis.repository.ClienteRepository;
+import com.antecsis.repository.HistorialPedidoRepository;
+import com.antecsis.repository.MetodoPagoRepository;
+import com.antecsis.repository.ProductoRepository;
+import com.antecsis.repository.SectorRepository;
+import com.antecsis.repository.UsuarioRepository;
+import com.antecsis.repository.VentaRepository;
 import com.antecsis.service.InventarioService;
 import com.antecsis.service.SecuenciaComprobanteService;
 import com.antecsis.service.VentaService;
@@ -23,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -47,6 +65,7 @@ public class VentaServiceImpl implements VentaService {
     private final InventarioService inventarioService;
     private final SecuenciaComprobanteService secuenciaComprobanteService;
     private final SectorRepository sectorRepo;
+    private final PayuPaymentService payuPaymentService;
 
     @Override
     @Transactional(readOnly = true)
@@ -68,13 +87,13 @@ public class VentaServiceImpl implements VentaService {
     @Override
     @Transactional
     public VentaResponseDTO crear(VentaRequestDTO dto) {
-        var cliente = clienteRepo.findById(dto.clienteId())
+        Cliente cliente = clienteRepo.findById(dto.clienteId())
                 .orElseThrow(() -> new BusinessException("Cliente no existe"));
 
-        var usuario = obtenerUsuarioAutenticado();
+        Usuario usuario = obtenerUsuarioAutenticado();
         verificarAccesoSector(cliente.getSector());
 
-        var venta = new Venta();
+        Venta venta = new Venta();
         venta.setCliente(cliente);
         venta.setUsuario(usuario);
         venta.setSector(usuario.getSede());
@@ -129,19 +148,24 @@ public class VentaServiceImpl implements VentaService {
                 : null;
         venta.setNumeroDocumento(numeroGenerado != null ? numeroGenerado : dto.numeroDocumento());
 
+        MetodoPago metodoPago = null;
         if (dto.metodoPagoId() != null) {
             MetodoPago mp = metodoPagoRepo.findById(dto.metodoPagoId())
                     .orElseThrow(() -> new BusinessException("Método de pago no existe"));
             venta.setMetodoPago(mp);
+            metodoPago = mp;
         }
 
         var detalles = new ArrayList<VentaDetalle>();
-        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal totalBruto = BigDecimal.ZERO;
 
         for (VentaItemDTO item : dto.items()) {
             Producto producto = productoRepo.findById(item.productoId())
                     .orElseThrow(() -> new BusinessException("Producto no existe: ID " + item.productoId()));
             verificarAccesoSector(producto.getSector());
+            if (Boolean.TRUE.equals(producto.getEsInsumo())) {
+                throw new BusinessException("No se puede vender un insumo. Use un producto vendible.");
+            }
 
             if (producto.getStock() < item.cantidad()) {
                 throw new BusinessException("Stock insuficiente para el producto: " + producto.getNombre()
@@ -168,12 +192,73 @@ public class VentaServiceImpl implements VentaService {
             det.setPrecioUnitario(precioUnitario);
 
             BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.cantidad()));
-            total = total.add(subtotal);
+            totalBruto = totalBruto.add(subtotal);
             detalles.add(det);
         }
 
-        venta.setTotal(total);
         venta.setDetalles(detalles);
+        venta.setTotalBruto(totalBruto);
+
+        // Promoción: por cada 10 compras calificadas (total bruto > 50) del mismo cliente en el mismo sector,
+        // aplicar 10% de descuento en la compra #10 y repetir (20, 30...).
+        BigDecimal minCompra = new BigDecimal("50.00");
+        if (totalBruto != null && totalBruto.compareTo(minCompra) > 0) {
+            Long clienteId = venta.getCliente() != null ? venta.getCliente().getId() : null;
+            Long sectorId = venta.getSector() != null ? venta.getSector().getId() : null;
+
+            long visitasAntes = (clienteId != null && sectorId != null)
+                    ? ventaRepo.countComprasCalificadasParaPromocion(
+                            clienteId,
+                            sectorId,
+                            minCompra,
+                            EstadoVenta.ANULADA
+                    )
+                    : 0L;
+
+            long visitaActual = visitasAntes + 1;
+            boolean aplicaDescuento = visitaActual % 10 == 0;
+
+            if (aplicaDescuento) {
+                BigDecimal factor = new BigDecimal("0.80"); // 20% dto
+                BigDecimal totalNeto = BigDecimal.ZERO;
+
+                for (VentaDetalle det : detalles) {
+                    BigDecimal precioUnitarioSinDescuento = det.getPrecioUnitario() != null
+                            ? det.getPrecioUnitario()
+                            : BigDecimal.ZERO;
+                    BigDecimal precioUnitarioConDescuento = precioUnitarioSinDescuento
+                            .multiply(factor)
+                            .setScale(2, RoundingMode.HALF_UP);
+                    det.setPrecioUnitario(precioUnitarioConDescuento);
+                    totalNeto = totalNeto.add(precioUnitarioConDescuento.multiply(BigDecimal.valueOf(det.getCantidad())));
+                }
+
+                venta.setTotal(totalNeto);
+                venta.setDescuentoPromocionVisitasPorcentaje(new BigDecimal("20.00"));
+                venta.setDescuentoPromocionVisitasMonto(
+                        totalBruto.subtract(totalNeto).setScale(2, RoundingMode.HALF_UP)
+                );
+                log.info("Promoción visitas aplicada: cliente={}, sector={}, visitaActual={}, descuento=20%",
+                        clienteId, sectorId, visitaActual);
+            } else {
+                venta.setTotal(totalBruto);
+                venta.setDescuentoPromocionVisitasMonto(null);
+                venta.setDescuentoPromocionVisitasPorcentaje(null);
+            }
+        } else {
+            venta.setTotal(totalBruto);
+            venta.setDescuentoPromocionVisitasMonto(null);
+            venta.setDescuentoPromocionVisitasPorcentaje(null);
+        }
+
+        // Si el método de pago es Yape (vía PayU) y se enviaron datos, procesar cobro antes de guardar la venta
+        boolean esYape = metodoPago != null
+                && metodoPago.getNombre() != null
+                && metodoPago.getNombre().toLowerCase().contains("yape");
+        if (esYape && dto.yapeTelefono() != null && !dto.yapeTelefono().isBlank()
+                && dto.yapeOtp() != null && !dto.yapeOtp().isBlank()) {
+            payuPaymentService.cobrarConYape(venta, dto.yapeTelefono().trim(), dto.yapeOtp().trim());
+        }
 
         Venta guardada = ventaRepo.save(venta);
 
@@ -192,7 +277,7 @@ public class VentaServiceImpl implements VentaService {
         }
 
         log.info("Venta #{} creada por {} - Total: {} - Cliente: {}",
-                guardada.getId(), usuario.getUsername(), total, cliente.getNombre());
+                guardada.getId(), usuario.getUsername(), guardada.getTotal(), cliente.getNombre());
 
         // Hook para acumulación de puntos CMR (stub: solo loggea si viene DNI y el método de pago es CMR)
         if (dto.dniCmr() != null && !dto.dniCmr().isBlank()
@@ -465,6 +550,18 @@ public class VentaServiceImpl implements VentaService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepo.findByUsername(username)
                 .orElseThrow(() -> new BusinessException("Usuario autenticado no encontrado"));
+    }
+
+    @Override
+    public long contarComprasCalificadas(Long clienteId) {
+        Long sectorId = obtenerSectorIdAutenticado();
+        BigDecimal minCompra = new BigDecimal("50.00");
+        return ventaRepo.countComprasCalificadasParaPromocion(
+                clienteId,
+                sectorId,
+                minCompra,
+                EstadoVenta.ANULADA
+        );
     }
 
     private VentaResponseDTO toResponseDTO(Venta v) {

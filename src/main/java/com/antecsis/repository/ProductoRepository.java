@@ -13,6 +13,14 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     Page<Producto> findBySectorId(Long sectorId, Pageable pageable);
 
+    Page<Producto> findBySectorIdAndEsInsumo(Long sectorId, boolean esInsumo, Pageable pageable);
+
+    Page<Producto> findByEsInsumo(boolean esInsumo, Pageable pageable);
+
+    Page<Producto> findBySectorIdAndEsInsumoAndStockLessThanEqual(Long sectorId, boolean esInsumo, Integer stock, Pageable pageable);
+
+    Page<Producto> findByEsInsumoAndStockLessThanEqual(boolean esInsumo, Integer stock, Pageable pageable);
+
     Page<Producto> findBySectorIdAndStockLessThanEqual(Long sectorId, Integer stock, Pageable pageable);
 
     @Query("""
@@ -29,4 +37,8 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     boolean existsByNombreAndSectorId(String nombre, Long sectorId);
 
     boolean existsByCodigoAndSectorId(String codigo, Long sectorId);
+
+    boolean existsByNombreAndSectorIdAndEsInsumo(String nombre, Long sectorId, boolean esInsumo);
+
+    boolean existsByCodigoAndSectorIdAndEsInsumo(String codigo, Long sectorId, boolean esInsumo);
 }

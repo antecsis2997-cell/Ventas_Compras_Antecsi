@@ -1,11 +1,5 @@
 package com.antecsis.service.impl;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.antecsis.dto.producto.ProductoRequestDTO;
 import com.antecsis.dto.producto.ProductoResponseDTO;
 import com.antecsis.entity.Categoria;
@@ -16,14 +10,21 @@ import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.CategoriaRepository;
 import com.antecsis.repository.ProductoRepository;
 import com.antecsis.repository.UsuarioRepository;
-import com.antecsis.service.ProductoService;
+import com.antecsis.service.InsumoService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
-import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class ProductoServiceImpl implements ProductoService {
+public class InsumoServiceImpl implements InsumoService {
 
     private final ProductoRepository repository;
     private final CategoriaRepository categoriaRepository;
@@ -34,19 +35,16 @@ public class ProductoServiceImpl implements ProductoService {
     public ProductoResponseDTO crear(ProductoRequestDTO dto) {
         Usuario usuario = obtenerUsuarioAutenticado();
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
-
-        // Validar duplicados por nombre dentro del mismo sector
-        if (sectorId != null && dto.nombre() != null) {
-            if (repository.existsByNombreAndSectorIdAndEsInsumo(dto.nombre(), sectorId, false)) {
-                throw new BusinessException("Ya existe un producto con ese nombre en tu bodega");
-            }
+        if (sectorId == null) {
+            throw new BusinessException("El usuario autenticado no tiene sector asignado");
         }
 
-        // Validar duplicados por código dentro del mismo sector
-        if (sectorId != null && dto.codigo() != null && !dto.codigo().isBlank()) {
-            if (repository.existsByCodigoAndSectorIdAndEsInsumo(dto.codigo(), sectorId, false)) {
-                throw new BusinessException("Ya existe un producto con ese código en tu bodega");
-            }
+        if (dto.nombre() != null && repository.existsByNombreAndSectorIdAndEsInsumo(dto.nombre(), sectorId, true)) {
+            throw new BusinessException("Ya existe un insumo con ese nombre en tu bodega");
+        }
+        if (dto.codigo() != null && !dto.codigo().isBlank()
+                && repository.existsByCodigoAndSectorIdAndEsInsumo(dto.codigo(), sectorId, true)) {
+            throw new BusinessException("Ya existe un insumo con ese código en tu bodega");
         }
 
         Producto producto = new Producto();
@@ -65,14 +63,15 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setCantidad(dto.cantidad());
         producto.setSector(usuario.getSede());
         producto.setActivo(true);
-        // /api/productos es SOLO para productos vendibles
-        producto.setEsInsumo(false);
+        producto.setEsInsumo(true);
 
         if (dto.categoriaId() != null) {
             Categoria cat = categoriaRepository.findById(dto.categoriaId())
                     .orElseThrow(() -> new BusinessException("Categoría no existe"));
             verificarAccesoSector(cat.getSector());
             producto.setCategoria(cat);
+        } else {
+            producto.setCategoria(null);
         }
 
         Producto guardado = repository.save(producto);
@@ -84,18 +83,20 @@ public class ProductoServiceImpl implements ProductoService {
     public Page<ProductoResponseDTO> listar(Pageable pageable) {
         Long sectorId = obtenerSectorIdAutenticado();
         if (sectorId != null) {
-            // /api/productos debe listar SOLO productos vendibles (no insumos)
-            return repository.findBySectorIdAndEsInsumo(sectorId, false, pageable).map(this::toResponseDTO);
+            return repository.findBySectorIdAndEsInsumo(sectorId, true, pageable).map(this::toResponseDTO);
         }
-        return repository.findByEsInsumo(false, pageable).map(this::toResponseDTO);
+        return repository.findByEsInsumo(true, pageable).map(this::toResponseDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductoResponseDTO obtenerPorId(Long id) {
         Producto producto = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("Producto no existe"));
+                .orElseThrow(() -> new BusinessException("Insumo no existe"));
         verificarAccesoSector(producto.getSector());
+        if (!Boolean.TRUE.equals(producto.getEsInsumo())) {
+            throw new BusinessException("El ítem no es un insumo");
+        }
         return toResponseDTO(producto);
     }
 
@@ -103,33 +104,34 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public ProductoResponseDTO actualizar(Long id, ProductoRequestDTO dto) {
         Producto producto = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("Producto no existe"));
+                .orElseThrow(() -> new BusinessException("Insumo no existe"));
         verificarAccesoSector(producto.getSector());
+        if (!Boolean.TRUE.equals(producto.getEsInsumo())) {
+            throw new BusinessException("El ítem no es un insumo");
+        }
 
         Usuario usuario = obtenerUsuarioAutenticado();
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
-        // Validar duplicados por nombre (excluyendo el producto actual)
+        // Validación de duplicados (solo insumos) usando búsqueda por sector
         if (sectorId != null && dto.nombre() != null) {
             boolean existeOtroConMismoNombre = repository.findBySectorId(sectorId, Pageable.unpaged())
                     .stream()
                     .anyMatch(p -> !p.getId().equals(id)
-                            && Boolean.FALSE.equals(p.getEsInsumo())
+                            && Boolean.TRUE.equals(p.getEsInsumo())
                             && p.getNombre().equals(dto.nombre()));
             if (existeOtroConMismoNombre) {
-                throw new BusinessException("Ya existe otro producto con ese nombre en tu bodega");
+                throw new BusinessException("Ya existe otro insumo con ese nombre en tu bodega");
             }
         }
-
-        // Validar duplicados por código (excluyendo el producto actual)
         if (sectorId != null && dto.codigo() != null && !dto.codigo().isBlank()) {
             boolean existeOtroConMismoCodigo = repository.findBySectorId(sectorId, Pageable.unpaged())
                     .stream()
                     .anyMatch(p -> !p.getId().equals(id)
-                            && Boolean.FALSE.equals(p.getEsInsumo())
+                            && Boolean.TRUE.equals(p.getEsInsumo())
                             && dto.codigo().equals(p.getCodigo()));
             if (existeOtroConMismoCodigo) {
-                throw new BusinessException("Ya existe otro producto con ese código en tu bodega");
+                throw new BusinessException("Ya existe otro insumo con ese código en tu bodega");
             }
         }
 
@@ -146,8 +148,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setTipo(dto.tipo());
         producto.setMarca(dto.marca());
         producto.setCantidad(dto.cantidad());
-        // /api/productos es SOLO para productos vendibles
-        producto.setEsInsumo(false);
+        producto.setEsInsumo(true);
 
         if (dto.categoriaId() != null) {
             Categoria cat = categoriaRepository.findById(dto.categoriaId())
@@ -166,16 +167,18 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public void eliminar(Long id) {
         Producto producto = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("Producto no existe"));
+                .orElseThrow(() -> new BusinessException("Insumo no existe"));
         verificarAccesoSector(producto.getSector());
+        if (!Boolean.TRUE.equals(producto.getEsInsumo())) {
+            throw new BusinessException("El ítem no es un insumo");
+        }
         producto.setActivo(false);
         repository.save(producto);
     }
 
     private void verificarAccesoSector(Sector sectorEntidad) {
         Long sectorIdUsuario = obtenerSectorIdAutenticado();
-        if (sectorIdUsuario != null && sectorEntidad != null
-                && !sectorIdUsuario.equals(sectorEntidad.getId())) {
+        if (sectorIdUsuario != null && sectorEntidad != null && !sectorIdUsuario.equals(sectorEntidad.getId())) {
             throw new BusinessException("No tiene acceso a este recurso");
         }
     }
@@ -214,3 +217,4 @@ public class ProductoServiceImpl implements ProductoService {
         );
     }
 }
+

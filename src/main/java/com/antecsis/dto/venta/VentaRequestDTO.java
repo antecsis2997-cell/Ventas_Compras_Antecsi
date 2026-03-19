@@ -43,6 +43,12 @@ public record VentaRequestDTO(
     @Schema(description = "DNI para acumulación de puntos CMR (opcional)")
     String dniCmr,
 
+    @Schema(description = "Celular del cliente para pago con Yape (solo cuando el método de pago es Yape por PayU)")
+    String yapeTelefono,
+
+    @Schema(description = "Código OTP de Yape (6 dígitos)")
+    String yapeOtp,
+
     @Schema(description = "Lista de items: productoId y cantidad. Al menos uno requerido.", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty(message = "Debe incluir al menos un item")
     List<@Valid VentaItemDTO> items

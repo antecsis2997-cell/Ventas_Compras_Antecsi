@@ -42,6 +42,18 @@ public class Venta {
     @Column(precision = 12, scale = 2)
     private BigDecimal total;
 
+    /** Total sin aplicar promociones/descuentos (para reglas basadas en umbrales). */
+    @Column(name = "total_bruto", precision = 12, scale = 2)
+    private BigDecimal totalBruto;
+
+    /** Monto descontado por la promoción de visitas (10% cada vez que el cliente llega al múltiplo de 10). */
+    @Column(name = "descuento_promocion_visitas_monto", precision = 12, scale = 2)
+    private BigDecimal descuentoPromocionVisitasMonto;
+
+    /** Porcentaje aplicado en la promoción de visitas (ej. 10.00). */
+    @Column(name = "descuento_promocion_visitas_porcentaje", precision = 5, scale = 2)
+    private BigDecimal descuentoPromocionVisitasPorcentaje;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoVenta estado = EstadoVenta.COMPLETADA;

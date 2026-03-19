@@ -14,5 +14,7 @@ public record InventarioResponseDTO(
     Integer stockMinimoAlerta,
     Long sectorId,
     String sectorNombre,
-    String imagenUrl
+    String imagenUrl,
+    Boolean activo,
+    String estado
 ) {}
