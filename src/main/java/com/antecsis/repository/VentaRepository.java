@@ -2,6 +2,8 @@ package com.antecsis.repository;
 
 import com.antecsis.entity.EstadoEntrega;
 import com.antecsis.entity.EstadoVenta;
+import com.antecsis.entity.SunatEstadoCdr;
+import com.antecsis.entity.TipoDocumentoVenta;
 import com.antecsis.entity.TipoEntrega;
 import com.antecsis.entity.Venta;
 import org.springframework.data.domain.Page;
@@ -86,5 +88,41 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             @Param("sectorId") Long sectorId,
             @Param("estadoVenta") EstadoVenta estadoVenta,
             @Param("estadoEntrega") EstadoEntrega estadoEntrega
+    );
+
+    // ── Queries para SEE del Contribuyente (SUNAT) ───────────────────────
+
+    @Query("""
+        SELECT v FROM Venta v
+        WHERE v.sector.id = :sectorId
+          AND v.tipoDocumento = com.antecsis.entity.TipoDocumentoVenta.BOLETA
+          AND v.sunatEstadoCdr = :estado
+          AND v.fecha BETWEEN :inicio AND :fin
+        ORDER BY v.fecha ASC
+        """)
+    List<Venta> findBoletasPendientesParaResumen(
+            @Param("sectorId") Long sectorId,
+            @Param("estado") SunatEstadoCdr estado,
+            @Param("inicio") java.time.LocalDateTime inicio,
+            @Param("fin") java.time.LocalDateTime fin
+    );
+
+    @Query("""
+        SELECT v FROM Venta v
+        WHERE v.tipoDocumento = com.antecsis.entity.TipoDocumentoVenta.BOLETA
+          AND v.sunatEstadoCdr = :estado
+          AND v.sunatTicket IS NOT NULL
+        """)
+    List<Venta> findBoletasConTicketPendiente(@Param("estado") SunatEstadoCdr estado);
+
+    @Query("""
+        SELECT v FROM Venta v
+        WHERE v.sunatEstadoCdr = :estado
+          AND v.sunatIntentos < :maxIntentos
+        ORDER BY v.fecha ASC
+        """)
+    List<Venta> findVentasParaReintentar(
+            @Param("estado") SunatEstadoCdr estado,
+            @Param("maxIntentos") int maxIntentos
     );
 }

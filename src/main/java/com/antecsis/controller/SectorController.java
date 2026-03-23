@@ -27,13 +27,13 @@ public class SectorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(dto));
     }
 
-    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
     @GetMapping
     public ResponseEntity<Page<SectorResponseDTO>> listar(Pageable pageable) {
         return ResponseEntity.ok(service.listar(pageable));
     }
 
-    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<SectorResponseDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));

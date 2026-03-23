@@ -29,7 +29,13 @@ public record VentaResponseDTO(
     String confirmacionCorreo,
     String confirmacionTelefono,
     LocalDateTime confirmacionFecha,
-    List<VentaItemResponseDTO> items
+    List<VentaItemResponseDTO> items,
+    // ── SUNAT Facturación Electrónica ──
+    String sunatEstadoCdr,
+    String sunatCodigoRespuesta,
+    String sunatDescripcionCdr,
+    LocalDateTime sunatFechaEnvio,
+    String sunatNombreArchivo
 ) {
     public record VentaItemResponseDTO(
         String productoNombre,

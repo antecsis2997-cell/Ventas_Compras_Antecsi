@@ -157,9 +157,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Page<UsuarioResponseDTO> listar(Pageable pageable) {
         Usuario actual = obtenerUsuarioActual();
         if (esSuperusuario(actual)) {
-            return usuarioRepository.findAll(pageable).map(this::toResponseDTO);
+            // SUPERUSUARIO solo ve los ADMINs (uno por bodega): son sus "clientes"
+            return usuarioRepository.findByRol_Nombre("ADMIN", pageable).map(this::toResponseDTO);
         }
         if (esAdmin(actual) && actual.getSede() != null) {
+            // ADMIN ve solo los usuarios de su propia bodega (excluyéndose a sí mismo)
             return usuarioRepository.findBySede_Id(actual.getSede().getId(), pageable).map(this::toResponseDTO);
         }
         return Page.empty(pageable);

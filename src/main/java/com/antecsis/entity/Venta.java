@@ -121,4 +121,38 @@ public class Venta {
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL)
     private List<VentaDetalle> detalles;
+
+    // ── Campos SEE del Contribuyente (SUNAT Facturación Electrónica) ──────
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sunat_estado_cdr", length = 20)
+    private SunatEstadoCdr sunatEstadoCdr;
+
+    /** Código de respuesta del CDR SUNAT: "0"=aceptado, "2xxx"-"3xxx"=rechazado */
+    @Column(name = "sunat_codigo_respuesta", length = 10)
+    private String sunatCodigoRespuesta;
+
+    /** Descripción del CDR (motivo de rechazo u observación) */
+    @Column(name = "sunat_descripcion_cdr", columnDefinition = "TEXT")
+    private String sunatDescripcionCdr;
+
+    /** Fecha y hora en que se envió el comprobante a SUNAT */
+    @Column(name = "sunat_fecha_envio")
+    private java.time.LocalDateTime sunatFechaEnvio;
+
+    /** Ticket SUNAT para boletas (proceso asíncrono via sendSummary) */
+    @Column(name = "sunat_ticket", length = 50)
+    private String sunatTicket;
+
+    /** Hash SHA-256 del XML firmado (para verificación de integridad) */
+    @Column(name = "sunat_hash", length = 255)
+    private String sunatHash;
+
+    /** Nombre del archivo XML enviado a SUNAT. Ej: "20123456789-01-F001-1" */
+    @Column(name = "sunat_nombre_archivo", length = 100)
+    private String sunatNombreArchivo;
+
+    /** Número de intentos de envío a SUNAT (para reintentos) */
+    @Column(name = "sunat_intentos", nullable = false, columnDefinition = "integer default 0")
+    private int sunatIntentos = 0;
 }

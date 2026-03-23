@@ -27,6 +27,7 @@ import com.antecsis.repository.VentaRepository;
 import com.antecsis.service.InventarioService;
 import com.antecsis.service.SecuenciaComprobanteService;
 import com.antecsis.service.VentaService;
+import com.antecsis.service.sunat.SunatVentaService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,7 @@ public class VentaServiceImpl implements VentaService {
     private final SecuenciaComprobanteService secuenciaComprobanteService;
     private final SectorRepository sectorRepo;
     private final PayuPaymentService payuPaymentService;
+    private final SunatVentaService sunatVentaService;
 
     @Override
     @Transactional(readOnly = true)
@@ -285,7 +287,15 @@ public class VentaServiceImpl implements VentaService {
                 && "CMR".equalsIgnoreCase(guardada.getMetodoPago().getNombre())) {
             log.info("Solicitud de acumulación de puntos CMR para DNI {} en venta #{} ({} puntos configurables).",
                     dto.dniCmr(), guardada.getId(), "100");
-            // Aquí en el futuro se integrará la llamada real al API CMR.
+        }
+
+        // ── Envío a SUNAT (SEE del Contribuyente) ─────────────────────────
+        // Se ejecuta en transacción separada (REQUIRES_NEW) para que un error
+        // de comunicación con SUNAT NO haga rollback de la venta ya guardada.
+        try {
+            sunatVentaService.enviarComprobante(guardada);
+        } catch (Exception e) {
+            log.error("Error enviando venta #{} a SUNAT (venta guardada correctamente): {}", guardada.getId(), e.getMessage());
         }
 
         return toResponseDTO(guardada);
@@ -599,7 +609,12 @@ public class VentaServiceImpl implements VentaService {
                 v.getConfirmacionCorreo(),
                 v.getConfirmacionTelefono(),
                 v.getConfirmacionFecha(),
-                items
+                items,
+                v.getSunatEstadoCdr() != null ? v.getSunatEstadoCdr().name() : null,
+                v.getSunatCodigoRespuesta(),
+                v.getSunatDescripcionCdr(),
+                v.getSunatFechaEnvio(),
+                v.getSunatNombreArchivo()
         );
     }
 }

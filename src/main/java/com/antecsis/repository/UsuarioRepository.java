@@ -28,4 +28,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
 	/** Buscar usuarios por correo (autocomplete remitente). */
 	List<Usuario> findTop10ByCorreoContainingIgnoreCaseOrderByCorreo(String correo);
+
+	/** Lista solo los usuarios con un rol específico (paginado). Usado por SUPERUSUARIO para ver solo ADMINs. */
+	Page<Usuario> findByRol_Nombre(String rolNombre, Pageable pageable);
 }

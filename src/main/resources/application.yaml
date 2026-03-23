@@ -74,3 +74,17 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# ── Facturación Electrónica SUNAT (SEE del Contribuyente) ──
+sunat:
+  beta:
+    endpoint-factura: ${SUNAT_BETA_ENDPOINT_FACTURA:https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService}
+    endpoint-resumen: ${SUNAT_BETA_ENDPOINT_RESUMEN:https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService}
+  produccion:
+    endpoint-factura: ${SUNAT_PROD_ENDPOINT_FACTURA:https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService}
+    endpoint-resumen: ${SUNAT_PROD_ENDPOINT_RESUMEN:https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService}
+  resumen:
+    cron: ${SUNAT_RESUMEN_CRON:0 0 23 * * ?}   # 11 PM diario
+  cifrado:
+    # Clave AES-256 para cifrar credenciales SOL y certificado PFX (debe ser 32 chars)
+    clave: ${SUNAT_CIFRADO_CLAVE:AntecsisSunatKey2026Secure!1234}
