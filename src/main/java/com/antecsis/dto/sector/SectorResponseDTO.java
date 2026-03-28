@@ -4,7 +4,5 @@ public record SectorResponseDTO(
     Long id,
     String nombreSector,
     String telefono,
-    String direccion,
-    String prefijoBoleta,
-    String prefijoFactura
+    String direccion
 ) {}

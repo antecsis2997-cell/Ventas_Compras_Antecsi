@@ -24,6 +24,8 @@ import com.antecsis.repository.ProductoRepository;
 import com.antecsis.repository.SectorRepository;
 import com.antecsis.repository.UsuarioRepository;
 import com.antecsis.repository.VentaRepository;
+import com.antecsis.entity.ConfiguracionFiscal;
+import com.antecsis.service.ConfiguracionFiscalService;
 import com.antecsis.service.InventarioService;
 import com.antecsis.service.SecuenciaComprobanteService;
 import com.antecsis.service.VentaService;
@@ -39,6 +41,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import com.antecsis.dto.logistica.MetricasEntregasVendedorDTO;
 import com.antecsis.dto.logistica.LogisticaEntregaDetalleDTO;
@@ -65,6 +70,7 @@ public class VentaServiceImpl implements VentaService {
     private final HistorialPedidoRepository historialPedidoRepo;
     private final InventarioService inventarioService;
     private final SecuenciaComprobanteService secuenciaComprobanteService;
+    private final ConfiguracionFiscalService configuracionFiscalService;
     private final SectorRepository sectorRepo;
     private final PayuPaymentService payuPaymentService;
     private final SunatVentaService sunatVentaService;
@@ -83,17 +89,42 @@ public class VentaServiceImpl implements VentaService {
         Sector sector = usuario.getSede();
         if (sector == null || sector.getId() == null) return null;
         sector = sectorRepo.findById(sector.getId()).orElse(sector);
-        return secuenciaComprobanteService.siguienteNumeroPreview(sector, tipo);
+
+        // La serie proviene exclusivamente de ConfiguracionFiscal (SEE del Contribuyente)
+        Optional<ConfiguracionFiscal> cfgOpt = configuracionFiscalService.buscarActivaPorSector(sector.getId());
+        if (cfgOpt.isPresent()) {
+            ConfiguracionFiscal cfg = cfgOpt.get();
+            String serie = tipo == TipoDocumentoVenta.BOLETA ? cfg.getSerieBoleta() : cfg.getSerieFactura();
+            if (serie != null && !serie.isBlank()) {
+                return secuenciaComprobanteService.siguienteNumeroPreviewConPrefijo(sector, tipo, serie);
+            }
+        }
+
+        return null;
     }
 
     @Override
     @Transactional
     public VentaResponseDTO crear(VentaRequestDTO dto) {
-        Cliente cliente = clienteRepo.findById(dto.clienteId())
-                .orElseThrow(() -> new BusinessException("Cliente no existe"));
+        // clienteId es opcional: las boletas pueden emitirse como "Consumidor Final" sin identificar al comprador.
+        // Las facturas SIEMPRE requieren cliente con RUC.
+        boolean esFactura = dto.tipoDocumento() != null
+                && "FACTURA".equalsIgnoreCase(dto.tipoDocumento().trim());
+
+        if (esFactura && dto.clienteId() == null) {
+            throw new BusinessException("La Factura requiere seleccionar un cliente con RUC.");
+        }
+
+        Cliente cliente = null;
+        if (dto.clienteId() != null) {
+            cliente = clienteRepo.findById(dto.clienteId())
+                    .orElseThrow(() -> new BusinessException("Cliente no existe"));
+        }
 
         Usuario usuario = obtenerUsuarioAutenticado();
-        verificarAccesoSector(cliente.getSector());
+        if (cliente != null) {
+            verificarAccesoSector(cliente.getSector());
+        }
 
         Venta venta = new Venta();
         venta.setCliente(cliente);
@@ -140,14 +171,28 @@ public class VentaServiceImpl implements VentaService {
                 throw new BusinessException("Tipo de documento inválido. Use FACTURA o BOLETA.");
             }
         }
-        // Si el sector tiene prefijo configurado (ej. B101), generar correlativo automático (B101-00000001, ...)
+        // Generar el número de comprobante.
+        // Prioridad: serie de ConfiguracionFiscal SUNAT activa → prefijo del Sector → número manual del DTO.
         Sector sectorParaNumero = venta.getSector();
         if (sectorParaNumero != null && sectorParaNumero.getId() != null) {
             sectorParaNumero = sectorRepo.findById(sectorParaNumero.getId()).orElse(sectorParaNumero);
         }
-        String numeroGenerado = sectorParaNumero != null && venta.getTipoDocumento() != null
-                ? secuenciaComprobanteService.siguienteNumero(sectorParaNumero, venta.getTipoDocumento())
-                : null;
+
+        // La serie proviene exclusivamente de ConfiguracionFiscal activa (SEE del Contribuyente)
+        String numeroGenerado = null;
+        if (sectorParaNumero != null && venta.getTipoDocumento() != null) {
+            Optional<ConfiguracionFiscal> cfgOpt = configuracionFiscalService.buscarActivaPorSector(sectorParaNumero.getId());
+            if (cfgOpt.isPresent()) {
+                ConfiguracionFiscal cfg = cfgOpt.get();
+                String serie = venta.getTipoDocumento() == TipoDocumentoVenta.BOLETA
+                        ? cfg.getSerieBoleta() : cfg.getSerieFactura();
+                if (serie != null && !serie.isBlank()) {
+                    numeroGenerado = secuenciaComprobanteService.siguienteNumeroConPrefijo(
+                            sectorParaNumero, venta.getTipoDocumento(), serie);
+                }
+            }
+        }
+
         venta.setNumeroDocumento(numeroGenerado != null ? numeroGenerado : dto.numeroDocumento());
 
         MetodoPago metodoPago = null;
@@ -290,13 +335,20 @@ public class VentaServiceImpl implements VentaService {
         }
 
         // ── Envío a SUNAT (SEE del Contribuyente) ─────────────────────────
-        // Se ejecuta en transacción separada (REQUIRES_NEW) para que un error
-        // de comunicación con SUNAT NO haga rollback de la venta ya guardada.
-        try {
-            sunatVentaService.enviarComprobante(guardada);
-        } catch (Exception e) {
-            log.error("Error enviando venta #{} a SUNAT (venta guardada correctamente): {}", guardada.getId(), e.getMessage());
-        }
+        // Se registra como afterCommit: se ejecuta DESPUÉS de que la transacción
+        // de crear() hace commit, garantizando que la venta ya está visible en BD
+        // cuando enviarComprobante (REQUIRES_NEW) la intenta leer y actualizar.
+        final Long ventaId = guardada.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    sunatVentaService.enviarComprobante(ventaId);
+                } catch (Exception e) {
+                    log.error("Error enviando venta #{} a SUNAT tras commit: {}", ventaId, e.getMessage());
+                }
+            }
+        });
 
         return toResponseDTO(guardada);
     }

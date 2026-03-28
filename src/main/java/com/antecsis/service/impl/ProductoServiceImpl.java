@@ -19,6 +19,7 @@ import com.antecsis.repository.UsuarioRepository;
 import com.antecsis.service.ProductoService;
 
 import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -33,18 +34,25 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public ProductoResponseDTO crear(ProductoRequestDTO dto) {
         Usuario usuario = obtenerUsuarioAutenticado();
-        Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
+        Categoria cat = null;
+        if (dto.categoriaId() != null) {
+            cat = categoriaRepository.findById(dto.categoriaId())
+                    .orElseThrow(() -> new BusinessException("Categoría no existe"));
+            verificarAccesoSector(cat.getSector());
+        }
 
-        // Validar duplicados por nombre dentro del mismo sector
-        if (sectorId != null && dto.nombre() != null) {
-            if (repository.existsByNombreAndSectorIdAndEsInsumo(dto.nombre(), sectorId, false)) {
+        Long sectorIdUsuario = usuario.getSede() != null ? usuario.getSede().getId() : null;
+        Long sectorUnicidad = sectorIdUsuario != null
+                ? sectorIdUsuario
+                : (cat != null && cat.getSector() != null ? cat.getSector().getId() : null);
+
+        if (sectorUnicidad != null && dto.nombre() != null) {
+            if (repository.existsByNombreAndSectorIdAndEsInsumo(dto.nombre(), sectorUnicidad, false)) {
                 throw new BusinessException("Ya existe un producto con ese nombre en tu bodega");
             }
         }
-
-        // Validar duplicados por código dentro del mismo sector
-        if (sectorId != null && dto.codigo() != null && !dto.codigo().isBlank()) {
-            if (repository.existsByCodigoAndSectorIdAndEsInsumo(dto.codigo(), sectorId, false)) {
+        if (sectorUnicidad != null && dto.codigo() != null && !dto.codigo().isBlank()) {
+            if (repository.existsByCodigoAndSectorIdAndEsInsumo(dto.codigo(), sectorUnicidad, false)) {
                 throw new BusinessException("Ya existe un producto con ese código en tu bodega");
             }
         }
@@ -58,22 +66,20 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setStock(dto.stock());
         producto.setMoneda(Objects.requireNonNullElse(dto.moneda(), "PEN"));
         producto.setUnidadMedida(dto.unidadMedida());
-        producto.setImagenUrl(dto.imagenUrl());
+        producto.setImagenUrl(normalizarImagenUrl(dto.imagenUrl()));
         producto.setStockMinimoAlerta(dto.stockMinimoAlerta());
         producto.setTipo(dto.tipo());
         producto.setMarca(dto.marca());
         producto.setCantidad(dto.cantidad());
-        producto.setSector(usuario.getSede());
+        Sector sectorAsignado = usuario.getSede();
+        if (sectorAsignado == null && cat != null) {
+            sectorAsignado = cat.getSector();
+        }
+        producto.setSector(sectorAsignado);
         producto.setActivo(true);
         // /api/productos es SOLO para productos vendibles
         producto.setEsInsumo(false);
-
-        if (dto.categoriaId() != null) {
-            Categoria cat = categoriaRepository.findById(dto.categoriaId())
-                    .orElseThrow(() -> new BusinessException("Categoría no existe"));
-            verificarAccesoSector(cat.getSector());
-            producto.setCategoria(cat);
-        }
+        producto.setCategoria(cat);
 
         Producto guardado = repository.save(producto);
         return toResponseDTO(guardado);
@@ -107,11 +113,25 @@ public class ProductoServiceImpl implements ProductoService {
         verificarAccesoSector(producto.getSector());
 
         Usuario usuario = obtenerUsuarioAutenticado();
-        Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
+        Long sectorIdUsuario = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
-        // Validar duplicados por nombre (excluyendo el producto actual)
-        if (sectorId != null && dto.nombre() != null) {
-            boolean existeOtroConMismoNombre = repository.findBySectorId(sectorId, Pageable.unpaged())
+        Categoria nuevaCat = null;
+        if (dto.categoriaId() != null) {
+            nuevaCat = categoriaRepository.findById(dto.categoriaId())
+                    .orElseThrow(() -> new BusinessException("Categoría no existe"));
+            verificarAccesoSector(nuevaCat.getSector());
+        }
+
+        Long sectorUnicidad = sectorIdUsuario;
+        if (sectorUnicidad == null && nuevaCat != null && nuevaCat.getSector() != null) {
+            sectorUnicidad = nuevaCat.getSector().getId();
+        }
+        if (sectorUnicidad == null && producto.getSector() != null) {
+            sectorUnicidad = producto.getSector().getId();
+        }
+
+        if (sectorUnicidad != null && dto.nombre() != null) {
+            boolean existeOtroConMismoNombre = repository.findBySectorId(sectorUnicidad, Pageable.unpaged())
                     .stream()
                     .anyMatch(p -> !p.getId().equals(id)
                             && Boolean.FALSE.equals(p.getEsInsumo())
@@ -121,9 +141,8 @@ public class ProductoServiceImpl implements ProductoService {
             }
         }
 
-        // Validar duplicados por código (excluyendo el producto actual)
-        if (sectorId != null && dto.codigo() != null && !dto.codigo().isBlank()) {
-            boolean existeOtroConMismoCodigo = repository.findBySectorId(sectorId, Pageable.unpaged())
+        if (sectorUnicidad != null && dto.codigo() != null && !dto.codigo().isBlank()) {
+            boolean existeOtroConMismoCodigo = repository.findBySectorId(sectorUnicidad, Pageable.unpaged())
                     .stream()
                     .anyMatch(p -> !p.getId().equals(id)
                             && Boolean.FALSE.equals(p.getEsInsumo())
@@ -141,7 +160,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setStock(dto.stock());
         producto.setMoneda(Objects.requireNonNullElse(dto.moneda(), "PEN"));
         producto.setUnidadMedida(dto.unidadMedida());
-        producto.setImagenUrl(dto.imagenUrl());
+        producto.setImagenUrl(normalizarImagenUrl(dto.imagenUrl()));
         producto.setStockMinimoAlerta(dto.stockMinimoAlerta());
         producto.setTipo(dto.tipo());
         producto.setMarca(dto.marca());
@@ -149,11 +168,11 @@ public class ProductoServiceImpl implements ProductoService {
         // /api/productos es SOLO para productos vendibles
         producto.setEsInsumo(false);
 
-        if (dto.categoriaId() != null) {
-            Categoria cat = categoriaRepository.findById(dto.categoriaId())
-                    .orElseThrow(() -> new BusinessException("Categoría no existe"));
-            verificarAccesoSector(cat.getSector());
-            producto.setCategoria(cat);
+        if (nuevaCat != null) {
+            producto.setCategoria(nuevaCat);
+            if (usuario.getSede() == null && nuevaCat.getSector() != null) {
+                producto.setSector(nuevaCat.getSector());
+            }
         } else {
             producto.setCategoria(null);
         }
@@ -189,6 +208,13 @@ public class ProductoServiceImpl implements ProductoService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException("Usuario autenticado no encontrado"));
+    }
+
+    /** Quita espacios y deja null si viene vacío (evita URLs rotas por espacios al pegar). */
+    private static String normalizarImagenUrl(String url) {
+        if (url == null) return null;
+        String t = url.trim();
+        return t.isEmpty() ? null : t;
     }
 
     private ProductoResponseDTO toResponseDTO(Producto p) {

@@ -138,12 +138,40 @@ public class SunatXmlGeneratorService {
 
         BigDecimal totalPagar = totalValorVenta.add(totalIgv).setScale(2, RoundingMode.HALF_UP);
 
-        // Datos del receptor
-        String receptorTipoDoc = mapearTipoDocCliente(venta.getCliente().getTipoDocumento());
-        String receptorNumDoc = venta.getCliente().getDocumento() != null
-                ? venta.getCliente().getDocumento() : "-";
-        String receptorNombre = venta.getCliente().getNombre() != null
-                ? venta.getCliente().getNombre() : "-";
+        // Datos del receptor — puede ser null para boletas "Consumidor Final"
+        String receptorTipoDoc;
+        String receptorNumDoc;
+        String receptorNombre;
+
+        if (venta.getCliente() == null) {
+            // Boleta sin identificar al comprador (Consumidor Final, monto ≤ S/700)
+            receptorTipoDoc = "-";
+            receptorNumDoc = "-";
+            receptorNombre = "CONSUMIDOR FINAL";
+        } else {
+            receptorTipoDoc = mapearTipoDocCliente(venta.getCliente().getTipoDocumento());
+
+            // Validación: Factura solo admite receptor con RUC (código 6) y 11 dígitos
+            if (esFactura) {
+                if (!"6".equals(receptorTipoDoc)) {
+                    throw new BusinessException(
+                        "No se puede emitir Factura al cliente '" + venta.getCliente().getNombre()
+                        + "': su tipo de documento es '" + venta.getCliente().getTipoDocumento()
+                        + "'. La Factura solo se emite a clientes con RUC.");
+                }
+                String docNum = venta.getCliente().getDocumento();
+                if (docNum == null || !docNum.matches("\\d{11}")) {
+                    throw new BusinessException(
+                        "El RUC del cliente '" + venta.getCliente().getNombre()
+                        + "' debe tener exactamente 11 dígitos. Valor actual: '" + docNum + "'.");
+                }
+            }
+
+            receptorNumDoc = venta.getCliente().getDocumento() != null
+                    ? venta.getCliente().getDocumento() : "-";
+            receptorNombre = venta.getCliente().getNombre() != null
+                    ? venta.getCliente().getNombre() : "CONSUMIDOR FINAL";
+        }
 
         var fecha = venta.getFecha() != null ? venta.getFecha() : java.time.LocalDateTime.now();
 

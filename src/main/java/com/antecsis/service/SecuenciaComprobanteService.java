@@ -5,20 +5,21 @@ import com.antecsis.entity.TipoDocumentoVenta;
 
 /**
  * Genera el siguiente número de comprobante (serie + correlativo) por sector y tipo.
- * Formato: prefijo-00000001 (8 dígitos, al estilo establecimiento + punto de emisión).
+ * La serie proviene exclusivamente de ConfiguracionFiscal (SEE del Contribuyente).
+ * Formato: {serie}-{00000001} con 8 dígitos de correlativo.
  */
 public interface SecuenciaComprobanteService {
 
     /**
-     * Obtiene el siguiente número para el sector y tipo. El sector debe tener configurado
-     * prefijoBoleta (para BOLETA) o prefijoFactura (para FACTURA).
-     * @return número en formato "B137-00000001" o null si el sector no tiene prefijo para ese tipo
+     * Genera el siguiente número usando la serie proporcionada (de ConfiguracionFiscal SUNAT).
+     * Incrementa el contador de secuencia del sector.
+     * @return número en formato "B001-00000001", o null si el sector o prefijo son nulos
      */
-    String siguienteNumero(Sector sector, TipoDocumentoVenta tipo);
+    String siguienteNumeroConPrefijo(Sector sector, TipoDocumentoVenta tipo, String prefijo);
 
     /**
      * Vista previa del siguiente número (solo lectura, no incrementa la secuencia).
      * Para mostrar en pantalla antes de registrar la venta.
      */
-    String siguienteNumeroPreview(Sector sector, TipoDocumentoVenta tipo);
+    String siguienteNumeroPreviewConPrefijo(Sector sector, TipoDocumentoVenta tipo, String prefijo);
 }

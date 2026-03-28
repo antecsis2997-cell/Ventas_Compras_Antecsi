@@ -88,8 +88,18 @@ public class ConfiguracionFiscalServiceImpl implements ConfiguracionFiscalServic
         config.setDepartamento(dto.departamento() != null ? dto.departamento().trim() : null);
         config.setSolUsuarioCifrado(crypto.cifrar(dto.solUsuario()));
         config.setSolClaveCifrada(crypto.cifrar(dto.solClave()));
-        config.setSerieBoleta(dto.serieBoleta().toUpperCase());
-        config.setSerieFactura(dto.serieFactura().toUpperCase());
+
+        // Las series solo las puede modificar el ADMIN de la bodega.
+        // Si el SUPERUSUARIO guarda una config nueva, se inicializan con valores por defecto (B001/F001).
+        // Si ya existe la config, el SUPERUSUARIO no puede cambiarlas.
+        if (!esSuperusuario(usuario)) {
+            config.setSerieBoleta(dto.serieBoleta().toUpperCase());
+            config.setSerieFactura(dto.serieFactura().toUpperCase());
+        } else if (config.getId() == null) {
+            config.setSerieBoleta("B001");
+            config.setSerieFactura("F001");
+        }
+
         config.setAmbiente(dto.ambiente());
         config.setActivo(dto.activo());
 

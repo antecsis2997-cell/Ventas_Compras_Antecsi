@@ -16,6 +16,8 @@ logging:
   level:
     org.springframework.security: WARN
     org.hibernate: WARN
+    # Logs de facturación electrónica SUNAT: siempre visibles en cualquier perfil
+    com.antecsis.service.sunat: INFO
 
 spring:
   profiles:

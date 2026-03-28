@@ -209,7 +209,16 @@ public class SunatSoapService {
         log.debug("SUNAT {} response status: {}", action, response.statusCode());
 
         if (response.statusCode() >= 500) {
-            throw new BusinessException("SUNAT devolvió error HTTP " + response.statusCode());
+            // SUNAT devuelve HTTP 500 con un SOAP Fault en el body que contiene el error real.
+            // Si el body tiene un faultstring lo retornamos para que el parser lo extraiga.
+            // Si no hay body útil, lanzamos con el status.
+            String body = response.body();
+            if (body != null && (body.contains("faultstring") || body.contains("Fault"))) {
+                log.warn("SUNAT {} devolvió HTTP 500 con SOAP Fault — parseando body para extraer error real", action);
+                return body;
+            }
+            throw new BusinessException("SUNAT devolvió error HTTP " + response.statusCode()
+                    + (body != null && !body.isBlank() ? ": " + body.substring(0, Math.min(300, body.length())) : ""));
         }
         return response.body();
     }
@@ -228,11 +237,28 @@ public class SunatSoapService {
             // applicationResponse = ZIP en Base64
             NodeList appResp = doc.getElementsByTagName("applicationResponse");
             if (appResp.getLength() == 0) {
+                log.warn("SUNAT no devolvió applicationResponse. Respuesta completa: {}",
+                        soapRespuesta.substring(0, Math.min(500, soapRespuesta.length())));
                 return SunatCdrResult.errorEnvio("SUNAT no devolvió applicationResponse");
             }
 
-            String zipBase64 = appResp.item(0).getTextContent().trim();
+            // Quitar espacios y saltos de línea del Base64 (SUNAT puede formatear el contenido)
+            String zipBase64 = appResp.item(0).getTextContent().replaceAll("\\s", "");
+            log.debug("applicationResponse Base64 length: {} chars", zipBase64.length());
+
+            if (zipBase64.isEmpty()) {
+                log.warn("SUNAT devolvió applicationResponse vacío");
+                return SunatCdrResult.errorEnvio("SUNAT devolvió CDR vacío");
+            }
+
             String cdrXml = desempacarZip(zipBase64);
+
+            if (cdrXml.isBlank()) {
+                log.warn("CDR extraído del ZIP está vacío");
+                return SunatCdrResult.errorEnvio("El CDR extraído del ZIP está vacío");
+            }
+
+            log.debug("CDR XML extraído (primeros 300 chars): {}", cdrXml.substring(0, Math.min(300, cdrXml.length())));
             return parsearCdrXml(cdrXml);
 
         } catch (BusinessException e) {
@@ -288,20 +314,20 @@ public class SunatSoapService {
             // Cuando statusCode=0 SUNAT devuelve el CDR en <content> (no <applicationResponse>)
             NodeList content = doc.getElementsByTagName("content");
             if (content.getLength() > 0) {
-                String zipBase64 = content.item(0).getTextContent().trim();
+                String zipBase64 = content.item(0).getTextContent().replaceAll("\\s", "");
                 if (!zipBase64.isEmpty()) {
                     String cdrXml = desempacarZip(zipBase64);
-                    return parsearCdrXml(cdrXml);
+                    if (!cdrXml.isBlank()) return parsearCdrXml(cdrXml);
                 }
             }
 
             // Fallback: algunos SDKs devuelven <applicationResponse>
             NodeList appResp = doc.getElementsByTagName("applicationResponse");
             if (appResp.getLength() > 0) {
-                String zipBase64 = appResp.item(0).getTextContent().trim();
+                String zipBase64 = appResp.item(0).getTextContent().replaceAll("\\s", "");
                 if (!zipBase64.isEmpty()) {
                     String cdrXml = desempacarZip(zipBase64);
-                    return parsearCdrXml(cdrXml);
+                    if (!cdrXml.isBlank()) return parsearCdrXml(cdrXml);
                 }
             }
 
@@ -357,10 +383,29 @@ public class SunatSoapService {
     }
 
     private String desempacarZip(String zipBase64) throws IOException {
-        byte[] zipBytes = Base64.getDecoder().decode(zipBase64);
+        // getMimeDecoder() tolera saltos de línea y espacios en el Base64 (SUNAT formatea el XML)
+        byte[] zipBytes = Base64.getMimeDecoder().decode(zipBase64);
         try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
-            zis.getNextEntry();
-            return new String(zis.readAllBytes(), StandardCharsets.UTF_8);
+            ZipEntry entry;
+            // Iterar hasta encontrar la primera entrada que sea un archivo real (no directorio)
+            while ((entry = zis.getNextEntry()) != null) {
+                String nombre = entry.getName();
+                log.debug("Entrada ZIP: {} (directorio={}, {} bytes comprimidos)",
+                        nombre, entry.isDirectory(), entry.getCompressedSize());
+                if (entry.isDirectory() || nombre.endsWith("/")) {
+                    zis.closeEntry();
+                    continue;
+                }
+                String contenido = new String(zis.readAllBytes(), StandardCharsets.UTF_8);
+                if (!contenido.isBlank()) {
+                    return contenido;
+                }
+                // Si la entrada no tiene contenido, seguir buscando
+                log.debug("Entrada '{}' estaba vacía, buscando siguiente...", nombre);
+                zis.closeEntry();
+            }
+            log.warn("ZIP de SUNAT no contiene ningún archivo con contenido XML");
+            return "";
         }
     }
 

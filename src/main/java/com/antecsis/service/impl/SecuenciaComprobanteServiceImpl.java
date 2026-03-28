@@ -17,14 +17,15 @@ public class SecuenciaComprobanteServiceImpl implements SecuenciaComprobanteServ
 
     private final SecuenciaComprobanteRepository repository;
 
+    /**
+     * Genera el siguiente número usando el prefijo proporcionado (serie de ConfiguracionFiscal SUNAT),
+     * en lugar del prefijo almacenado en el Sector. Incrementa el mismo contador de secuencia.
+     */
     @Override
     @Transactional
-    public String siguienteNumero(Sector sector, TipoDocumentoVenta tipo) {
-        if (sector == null || sector.getId() == null) return null;
-        String prefijo = tipo == TipoDocumentoVenta.BOLETA
-                ? (sector.getPrefijoBoleta() != null && !sector.getPrefijoBoleta().isBlank() ? sector.getPrefijoBoleta().trim() : null)
-                : (sector.getPrefijoFactura() != null && !sector.getPrefijoFactura().isBlank() ? sector.getPrefijoFactura().trim() : null);
-        if (prefijo == null) return null;
+    public String siguienteNumeroConPrefijo(Sector sector, TipoDocumentoVenta tipo, String prefijo) {
+        if (sector == null || sector.getId() == null || prefijo == null || prefijo.isBlank()) return null;
+        String pref = prefijo.trim();
 
         long siguiente = 1;
         var seq = repository.findBySectorIdAndTipoDocumentoForUpdate(sector.getId(), tipo);
@@ -41,23 +42,19 @@ public class SecuenciaComprobanteServiceImpl implements SecuenciaComprobanteServ
         }
 
         String correlativo = String.format("%0" + DIGITOS_CORRELATIVO + "d", siguiente);
-        return prefijo + "-" + correlativo;
+        return pref + "-" + correlativo;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public String siguienteNumeroPreview(Sector sector, TipoDocumentoVenta tipo) {
-        if (sector == null || sector.getId() == null) return null;
-        String prefijo = tipo == TipoDocumentoVenta.BOLETA
-                ? (sector.getPrefijoBoleta() != null && !sector.getPrefijoBoleta().isBlank() ? sector.getPrefijoBoleta().trim() : null)
-                : (sector.getPrefijoFactura() != null && !sector.getPrefijoFactura().isBlank() ? sector.getPrefijoFactura().trim() : null);
-        if (prefijo == null) return null;
+    public String siguienteNumeroPreviewConPrefijo(Sector sector, TipoDocumentoVenta tipo, String prefijo) {
+        if (sector == null || sector.getId() == null || prefijo == null || prefijo.isBlank()) return null;
         long siguiente = 1;
         var seq = repository.findBySectorIdAndTipoDocumento(sector.getId(), tipo);
         if (seq.isPresent()) {
             siguiente = seq.get().getUltimoCorrelativo() + 1;
         }
         String correlativo = String.format("%0" + DIGITOS_CORRELATIVO + "d", siguiente);
-        return prefijo + "-" + correlativo;
+        return prefijo.trim() + "-" + correlativo;
     }
 }

@@ -10,7 +10,7 @@
   </ext:UBLExtensions>
   <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
   <cbc:CustomizationID>2.0</cbc:CustomizationID>
-  <cbc:ID>${m.serie}-${m.correlativo?c}</cbc:ID>
+  <cbc:ID>${m.serie}-${m.correlativo?string("00000000")}</cbc:ID>
   <cbc:IssueDate>${m.fechaEmision}</cbc:IssueDate>
   <cbc:IssueTime>${m.horaEmision}</cbc:IssueTime>
   <cbc:InvoiceTypeCode listID="${m.tipoDocumentoListId}">${m.tipoDocumento}</cbc:InvoiceTypeCode>

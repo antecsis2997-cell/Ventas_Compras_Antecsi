@@ -9,8 +9,7 @@ import java.util.List;
 
 @Schema(description = "Datos para registrar una venta: cliente, tipo documento (FACTURA/BOLETA), items (productoId, cantidad)")
 public record VentaRequestDTO(
-    @Schema(description = "ID del cliente", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "Cliente es obligatorio")
+    @Schema(description = "ID del cliente (opcional para boletas ≤ S/700 — se emite como Consumidor Final)")
     Long clienteId,
 
     @Schema(description = "ID del método de pago (opcional)")

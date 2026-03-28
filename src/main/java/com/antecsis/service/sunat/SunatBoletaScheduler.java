@@ -119,7 +119,7 @@ public class SunatBoletaScheduler {
         log.info("Reintentando {} ventas con error SUNAT...", errores.size());
         for (Venta venta : errores) {
             try {
-                sunatVentaService.enviarComprobante(venta);
+                sunatVentaService.enviarComprobante(venta.getId());
             } catch (Exception e) {
                 log.error("Error reintentando venta #{}: {}", venta.getId(), e.getMessage());
             }

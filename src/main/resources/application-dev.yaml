@@ -1,15 +1,21 @@
-# Perfil desarrollo: SQL visible, logs detallados, ddl-auto update
+# Perfil desarrollo: SQL silenciado, solo logs SUNAT visibles
+# Access token: 8 horas en dev (prod usa variable de entorno JWT_EXPIRATION)
+jwt:
+  expiration: 28800000
+
 spring:
   jpa:
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
     hibernate:
       ddl-auto: update
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    com.antecsis: DEBUG
-    org.springframework.web: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    com.antecsis: WARN
+    org.springframework.web: WARN
+    com.antecsis.service.sunat: DEBUG

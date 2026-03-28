@@ -35,16 +35,4 @@ public class Sector {
 
     @Column(length = 200)
     private String direccion;
-
-    /**
-     * Prefijo/serie para boletas de este sector (ej. B137). Si está configurado, el número se genera automáticamente (B137-00000001).
-     */
-    @Column(name = "prefijo_boleta", length = 20)
-    private String prefijoBoleta;
-
-    /**
-     * Prefijo/serie para facturas de este sector (ej. F137). Si está configurado, el número se genera automáticamente.
-     */
-    @Column(name = "prefijo_factura", length = 20)
-    private String prefijoFactura;
 }

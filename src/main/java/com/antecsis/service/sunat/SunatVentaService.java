@@ -36,11 +36,14 @@ public class SunatVentaService {
 
     /**
      * Intenta enviar el comprobante a SUNAT.
-     * Debe llamarse DENTRO de la misma transacción de guardado de la venta,
-     * con propagación REQUIRES_NEW para no rollbackear la venta si SUNAT falla.
+     * Debe llamarse DESPUÉS de que la transacción que guardó la venta haya hecho commit
+     * (via afterCommit hook), de modo que la venta ya sea visible en BD.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void enviarComprobante(Venta venta) {
+    public void enviarComprobante(Long ventaId) {
+        Venta venta = ventaRepo.findById(ventaId)
+                .orElseThrow(() -> new BusinessException("Venta no encontrada: " + ventaId));
+
         if (venta.getTipoDocumento() == null) {
             actualizarEstado(venta, SunatEstadoCdr.NO_APLICA, null, "Sin tipo de documento", null);
             return;
@@ -81,6 +84,11 @@ public class SunatVentaService {
 
             ventaRepo.save(venta);
 
+        } catch (BusinessException e) {
+            // Error de negocio (ej: cliente sin RUC para factura) — no reintentar automáticamente
+            log.error("Error de validación enviando comprobante {} a SUNAT: {}", nombreArchivo, e.getMessage());
+            actualizarEstado(venta, SunatEstadoCdr.RECHAZADO, "ERROR_VALIDACION", e.getMessage(), null);
+            ventaRepo.save(venta);
         } catch (Exception e) {
             log.error("Error enviando comprobante {} a SUNAT: {}", nombreArchivo, e.getMessage(), e);
             actualizarEstado(venta, SunatEstadoCdr.ERROR_ENVIO, "ERROR", e.getMessage(), null);
@@ -99,7 +107,7 @@ public class SunatVentaService {
         if (SunatEstadoCdr.ERROR_ENVIO != venta.getSunatEstadoCdr()) {
             throw new BusinessException("Solo se pueden reintentar ventas en estado ERROR_ENVIO");
         }
-        enviarComprobante(venta);
+        enviarComprobante(ventaId);
     }
 
     /**

@@ -31,15 +31,20 @@ public class ClienteServiceImpl implements ClienteService {
         Usuario usuario = obtenerUsuarioAutenticado();
         Long sectorId = usuario.getSede() != null ? usuario.getSede().getId() : null;
 
-        // Validar email duplicado por sector
-        if (sectorId != null) {
-            repository.findByEmailAndSectorId(dto.email(), sectorId).ifPresent(c -> {
-                throw new BusinessException("El email ya está registrado en tu bodega");
-            });
-        } else {
-            repository.findByEmail(dto.email()).ifPresent(c -> {
-                throw new BusinessException("El email ya está registrado");
-            });
+        String email = (dto.email() != null && !dto.email().isBlank()) ? dto.email().trim() : "";
+        String telefono = (dto.telefono() != null && !dto.telefono().isBlank()) ? dto.telefono().trim() : "";
+
+        // Validar email duplicado por sector (solo si se proporcionó email)
+        if (!email.isBlank()) {
+            if (sectorId != null) {
+                repository.findByEmailAndSectorId(email, sectorId).ifPresent(c -> {
+                    throw new BusinessException("El email ya está registrado en tu bodega");
+                });
+            } else {
+                repository.findByEmail(email).ifPresent(c -> {
+                    throw new BusinessException("El email ya está registrado");
+                });
+            }
         }
 
         // Validar documento duplicado por sector
@@ -51,8 +56,8 @@ public class ClienteServiceImpl implements ClienteService {
 
         Cliente cliente = new Cliente();
         cliente.setNombre(dto.nombre());
-        cliente.setEmail(dto.email());
-        cliente.setTelefono(dto.telefono());
+        cliente.setEmail(email);
+        cliente.setTelefono(telefono);
         cliente.setTipoDocumento(dto.tipoDocumento());
         cliente.setDocumento(dto.documento());
         cliente.setDireccion(dto.direccion());
