@@ -17,5 +17,7 @@ public class SuscripcionAlertScheduler {
     public void ejecutarAlertas() {
         log.debug("Ejecutando alertas automáticas de suscripciones vencidas");
         suscripcionService.ejecutarAlertasAutomaticas();
+        log.debug("Ejecutando alertas de suscripciones próximas a vencer");
+        suscripcionService.ejecutarAlertasProximoVencimiento();
     }
 }

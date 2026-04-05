@@ -1,5 +1,8 @@
 package com.antecsis.controller;
 
+import java.util.List;
+
+import com.antecsis.dto.sector.SectorPlataformaDTO;
 import com.antecsis.dto.sector.SectorRequestDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.antecsis.dto.sector.SectorResponseDTO;
@@ -20,6 +23,12 @@ import org.springframework.web.bind.annotation.*;
 public class SectorController {
 
     private final SectorService service;
+
+    @io.swagger.v3.oas.annotations.Operation(summary = "Sedes para la plataforma principal (todas si es superusuario, solo la suya si no)")
+    @GetMapping("/plataforma")
+    public ResponseEntity<List<SectorPlataformaDTO>> plataforma() {
+        return ResponseEntity.ok(service.listarParaPlataforma());
+    }
 
     @PreAuthorize("hasRole('SUPERUSUARIO')")
     @PostMapping

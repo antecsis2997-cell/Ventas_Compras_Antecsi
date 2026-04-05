@@ -8,11 +8,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.antecsis.entity.MetodoPago;
 import com.antecsis.entity.Modulo;
 import com.antecsis.entity.Rol;
+import com.antecsis.entity.RubroComercial;
 import com.antecsis.entity.Sector;
 import com.antecsis.entity.Usuario;
 import com.antecsis.repository.MetodoPagoRepository;
 import com.antecsis.repository.ModuloRepository;
 import com.antecsis.repository.RolRepository;
+import com.antecsis.repository.RubroComercialRepository;
 import com.antecsis.repository.SectorRepository;
 import com.antecsis.repository.UsuarioRepository;
 
@@ -28,6 +30,7 @@ public class DataInitializer {
             UsuarioRepository usuarioRepository,
             MetodoPagoRepository metodoPagoRepository,
             SectorRepository sectorRepository,
+            RubroComercialRepository rubroComercialRepository,
             ModuloRepository moduloRepository,
             PasswordEncoder passwordEncoder
     ) {
@@ -73,6 +76,13 @@ public class DataInitializer {
             crearMetodoPagoSiNoExiste(metodoPagoRepository, "YAPE");
             crearMetodoPagoSiNoExiste(metodoPagoRepository, "PLIN");
 
+            // ── Rubros comerciales (clasificación del negocio; distinto del sector/sede) ──
+            crearRubroComercialSiNoExiste(rubroComercialRepository, "MERCADO", "Mercado y retail", 1);
+            crearRubroComercialSiNoExiste(rubroComercialRepository, "ZAPATERIA", "Zapaterías", 2);
+            crearRubroComercialSiNoExiste(rubroComercialRepository, "ROPA", "Tienda de ropa", 3);
+            crearRubroComercialSiNoExiste(rubroComercialRepository, "ALIMENTOS", "Alimentos y bebidas", 4);
+            crearRubroComercialSiNoExiste(rubroComercialRepository, "OTROS", "Otros sectores", 5);
+
             // ── Módulos del sistema (catálogo para permisos por usuario) ──
             crearModuloSiNoExiste(moduloRepository, "DASHBOARD",            "Dashboard",            "Panel principal con resumen",              "dashboard",         1);
             crearModuloSiNoExiste(moduloRepository, "VENTAS",               "Ventas",               "Registro y gestión de ventas",             "shopping_cart",     2);
@@ -109,6 +119,19 @@ public class DataInitializer {
             mp.setActivo(true);
             repo.save(mp);
             log.info("Método de pago {} creado", nombre);
+        }
+    }
+
+    private void crearRubroComercialSiNoExiste(RubroComercialRepository repo, String codigo, String nombre, int orden) {
+        if (repo.findByCodigoIgnoreCase(codigo).isEmpty()) {
+            RubroComercial r = RubroComercial.builder()
+                    .codigo(codigo)
+                    .nombre(nombre)
+                    .activo(true)
+                    .orden(orden)
+                    .build();
+            repo.save(r);
+            log.info("Rubro comercial {} creado", codigo);
         }
     }
 

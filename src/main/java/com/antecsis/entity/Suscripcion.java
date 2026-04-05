@@ -33,6 +33,15 @@ public class Suscripcion {
     @JoinColumn(name = "sector_id", nullable = false)
     private Sector sector;
 
+    /** Rubro de negocio (Mercado, Zapatería, etc.); distinto del sector/sede operativo. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rubro_comercial_id")
+    private RubroComercial rubroComercial;
+
+    /** Correo del administrador del plan (compra pública u onboarding). */
+    @Column(name = "correo_admin", length = 200)
+    private String correoAdmin;
+
     @Column(length = 500)
     private String descripcion;
 
@@ -54,6 +63,10 @@ public class Suscripcion {
     /** Última vez que se envió alerta de vencimiento */
     @Column(name = "fecha_ultima_alerta")
     private LocalDateTime fechaUltimaAlerta;
+
+    /** Última alerta de "próximo a vencer" (licencia/suscripción en los próximos días). */
+    @Column(name = "fecha_ultima_alerta_proximo_vencimiento")
+    private LocalDateTime fechaUltimaAlertaProximoVencimiento;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

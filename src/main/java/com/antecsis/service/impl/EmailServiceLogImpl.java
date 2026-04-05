@@ -1,7 +1,8 @@
 package com.antecsis.service.impl;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import java.time.LocalDate;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
 import org.springframework.stereotype.Service;
 
@@ -28,5 +29,25 @@ public class EmailServiceLogImpl implements EmailService {
     public void enviarAlertaSuscripcionVencida(String para, String nombreCliente, String sucursal, LocalDate fechaCaducidad) {
         log.warn("(Mail no configurado) Se enviaría alerta suscripción vencida a {} - Cliente: {} - Sucursal: {} - Caducidad: {}",
                 para, nombreCliente, sucursal, fechaCaducidad);
+    }
+
+    @Override
+    public void enviarLicenciaPlan(String para, String nombreCliente, String planEtiqueta, String tokenLicencia, String urlActivacion) {
+        log.warn("(Mail no configurado) Se enviaría licencia plan {} a {} — token (primeros 40 chars): {} — URL: {}",
+                planEtiqueta, para, tokenLicencia != null && tokenLicencia.length() > 40 ? tokenLicencia.substring(0, 40) + "…" : tokenLicencia,
+                urlActivacion);
+    }
+
+    @Override
+    public void enviarAlertaSuscripcionPorVencer(String para, String nombreCliente, String sucursal,
+                                                 LocalDate fechaCaducidad, int diasRestantes) {
+        log.warn("(Mail no configurado) Alerta próximo vencimiento a {} — cliente {} — sucursal {} — {} ({} días)",
+                para, nombreCliente, sucursal, fechaCaducidad, diasRestantes);
+    }
+
+    @Override
+    public void enviarAlertaProveedorDeshabilitado(String para, String nombreProveedor, String nombreSede) {
+        log.warn("(Mail no configurado) Proveedor deshabilitado: {} en sede {} — notificar a {}",
+                nombreProveedor, nombreSede, para);
     }
 }

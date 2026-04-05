@@ -48,6 +48,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private static final int MAX_CAJEROS_POR_LICENCIA = 3;
     private static final int MAX_VENTAS_POR_LICENCIA = 1;
+    /** Administradores de sede permitidos por bodega/sucursal (documento: hasta 2 principales). */
+    private static final int MAX_ADMINS_POR_SEDE = 2;
 
     private static final Map<String, Set<String>> MODULOS_POR_DEFECTO = Map.of(
         "ADMIN", Set.of("DASHBOARD", "VENTAS", "COMPRAS", "PRODUCTOS", "INVENTARIO",
@@ -92,8 +94,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
         if ("ADMIN".equals(dto.rol()) && dto.sedeId() != null) {
             long adminsEnSede = usuarioRepository.countBySede_IdAndRol_Nombre(dto.sedeId(), "ADMIN");
-            if (adminsEnSede >= 1) {
-                throw new BusinessException("Solo puede existir un Administrador por sede. Esta sede ya tiene uno asignado.");
+            if (adminsEnSede >= MAX_ADMINS_POR_SEDE) {
+                throw new BusinessException("Solo pueden existir " + MAX_ADMINS_POR_SEDE
+                        + " administradores por sede. Esta sede ya alcanzó el límite.");
             }
         }
 
@@ -214,8 +217,9 @@ public class UsuarioServiceImpl implements UsuarioService {
             Long sedeIdFinal = u.getSede().getId();
             long adminsEnSede = usuarioRepository.countBySede_IdAndRol_Nombre(sedeIdFinal, "ADMIN");
             boolean eraAdminEnEstaSede = eraAdmin && sedeAnteriorId != null && sedeAnteriorId.equals(sedeIdFinal);
-            if (adminsEnSede >= 1 && !eraAdminEnEstaSede) {
-                throw new BusinessException("Solo puede existir un Administrador por sede. Esta sede ya tiene uno asignado.");
+            if (adminsEnSede >= MAX_ADMINS_POR_SEDE && !eraAdminEnEstaSede) {
+                throw new BusinessException("Solo pueden existir " + MAX_ADMINS_POR_SEDE
+                        + " administradores por sede. Esta sede ya alcanzó el límite.");
             }
         }
         return toResponseDTO(usuarioRepository.save(u));

@@ -35,4 +35,8 @@ public class Sector {
 
     @Column(length = 200)
     private String direccion;
+
+    /** URL de video promocional (YouTube, Vimeo, archivo público, etc.). */
+    @Column(name = "video_promocional_url", length = 500)
+    private String videoPromocionalUrl;
 }

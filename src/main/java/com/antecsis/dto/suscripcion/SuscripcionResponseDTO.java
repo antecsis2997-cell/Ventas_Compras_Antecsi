@@ -17,6 +17,9 @@ public record SuscripcionResponseDTO(
     LocalDate fechaCaducidad,
     String paquete,
     String correoReceptor,
+    String correoAdmin,
+    String rubroNombre,
+    Boolean licenciaActivada,
     LocalDateTime fechaUltimaAlerta,
     String textoAlerta
 ) {}

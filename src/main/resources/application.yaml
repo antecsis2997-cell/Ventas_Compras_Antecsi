@@ -10,6 +10,8 @@ app:
     from: ${MAIL_FROM:programador@antecsis.pe}
   suscripciones:
     alerta-cron: ${SUSCRIPCION_ALERTA_CRON:0 0 8 * * ?}  # 8:00 AM diario
+    # Avisar por correo si la suscripción vence dentro de N días (licencia próxima a caducar)
+    alerta-proximo-dias: ${SUSCRIPCION_ALERTA_PROXIMO_DIAS:7}
 
 # Logging base (dev/prod pueden sobrescribir)
 logging:
@@ -57,6 +59,11 @@ jwt:
   secret: ${JWT_SECRET:CLAVE_SUPER_SECRETA_123456789_ANTECSIS_SEGURA_2026}
   expiration: ${JWT_EXPIRATION:3600000}       # Access token: 1 hora (ms)
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # Refresh token: 7 días (ms)
+
+# Licencias de plan (JWT firmado distinto al de sesión; mín. 32 caracteres)
+license:
+  jwt:
+    secret: ${LICENSE_JWT_SECRET:LICENCIA_ANTECSIS_CLAVE_MINIMO_32_CARACTERES_2026}
 
 cmr:
   base-url: ${CMR_BASE_URL:https://api.cmr.mock}

@@ -7,5 +7,8 @@ public record SectorRequestDTO(
     String nombreSector,
 
     String telefono,
-    String direccion
+    String direccion,
+
+    /** URL de video promocional (YouTube, Vimeo, etc.). */
+    String videoPromocionalUrl
 ) {}

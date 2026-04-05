@@ -1,5 +1,8 @@
 package com.antecsis.service;
 
+import java.util.List;
+
+import com.antecsis.dto.sector.SectorPlataformaDTO;
 import com.antecsis.dto.sector.SectorRequestDTO;
 import com.antecsis.dto.sector.SectorResponseDTO;
 import org.springframework.data.domain.Page;
@@ -11,4 +14,7 @@ public interface SectorService {
     SectorResponseDTO obtenerPorId(Long id);
     SectorResponseDTO actualizar(Long id, SectorRequestDTO dto);
     void eliminar(Long id);
+
+    /** Tarjetas de sede para la plataforma principal (superusuario: todas; resto: su sede). */
+    List<SectorPlataformaDTO> listarParaPlataforma();
 }

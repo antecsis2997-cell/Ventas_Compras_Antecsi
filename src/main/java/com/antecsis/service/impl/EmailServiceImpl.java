@@ -68,4 +68,67 @@ public class EmailServiceImpl implements EmailService {
             throw e;
         }
     }
+
+    @Override
+    public void enviarLicenciaPlan(String para, String nombreCliente, String planEtiqueta, String tokenLicencia, String urlActivacion) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo(para);
+        msg.setSubject("Su licencia AnTecsis — Plan " + planEtiqueta);
+        msg.setText("Hola " + nombreCliente + ",\n\n"
+                + "Gracias por adquirir el plan " + planEtiqueta + ".\n\n"
+                + "Su clave de licencia (cópiela completa):\n\n"
+                + tokenLicencia + "\n\n"
+                + "Active la licencia en la aplicación:\n"
+                + "Ajustes → Cuenta → Licencia (o " + urlActivacion + ")\n\n"
+                + "— Equipo AnTecsis");
+
+        try {
+            mailSender.send(msg);
+            log.info("Licencia de plan enviada a: {}", para);
+        } catch (Exception e) {
+            log.error("Error al enviar licencia a {}: {}", para, e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void enviarAlertaSuscripcionPorVencer(String para, String nombreCliente, String sucursal,
+                                                 LocalDate fechaCaducidad, int diasRestantes) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo(para);
+        msg.setSubject("Importante: su licencia AnTecsis vence en " + diasRestantes + " día(s)");
+        msg.setText("Estimado/a " + nombreCliente + ",\n\n"
+                + "La suscripción/licencia de la sucursal \"" + sucursal + "\" vencerá el "
+                + fechaCaducidad + " (en " + diasRestantes + " día(s)).\n\n"
+                + "Renueve a tiempo para evitar interrupciones.\n\n"
+                + "— Sistema AnTecsis");
+        try {
+            mailSender.send(msg);
+            log.info("Alerta próximo vencimiento enviada a {}", para);
+        } catch (Exception e) {
+            log.error("Error al enviar alerta próximo vencimiento a {}: {}", para, e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void enviarAlertaProveedorDeshabilitado(String para, String nombreProveedor, String nombreSede) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setFrom(from);
+        msg.setTo(para);
+        msg.setSubject("Importante: proveedor deshabilitado — " + nombreProveedor);
+        msg.setText("Estimado/a administrador/a,\n\n"
+                + "El proveedor \"" + nombreProveedor + "\" ha sido deshabilitado en la sede \"" + nombreSede + "\".\n\n"
+                + "Revise el módulo Proveedores si necesita reactivarlo o reemplazarlo.\n\n"
+                + "— Sistema AnTecsis");
+        try {
+            mailSender.send(msg);
+            log.info("Alerta proveedor deshabilitado enviada a {}", para);
+        } catch (Exception e) {
+            log.error("Error al enviar alerta proveedor a {}: {}", para, e.getMessage());
+            throw e;
+        }
+    }
 }

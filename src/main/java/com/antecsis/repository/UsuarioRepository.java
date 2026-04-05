@@ -31,4 +31,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
 	/** Lista solo los usuarios con un rol específico (paginado). Usado por SUPERUSUARIO para ver solo ADMINs. */
 	Page<Usuario> findByRol_Nombre(String rolNombre, Pageable pageable);
+
+	List<Usuario> findBySede_IdAndRol_Nombre(Long sedeId, String rolNombre);
 }

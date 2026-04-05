@@ -62,6 +62,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/rubros-comerciales").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/sectores/plataforma").authenticated()
                         .requestMatchers(SecurityPaths.PUBLIC).permitAll()
                         .requestMatchers("/api/usuarios", "/api/usuarios/**")
                         .hasAnyAuthority("ROLE_SUPERUSUARIO", "ROLE_ADMIN")

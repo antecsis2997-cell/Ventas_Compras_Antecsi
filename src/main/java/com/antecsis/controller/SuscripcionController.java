@@ -35,8 +35,9 @@ public class SuscripcionController {
     @GetMapping
     public ResponseEntity<Page<SuscripcionResponseDTO>> listar(
             Pageable pageable,
-            @RequestParam(required = false) String estado) {
-        return ResponseEntity.ok(service.listar(pageable, estado));
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) Long rubroId) {
+        return ResponseEntity.ok(service.listar(pageable, estado, rubroId));
     }
 
     @PreAuthorize("hasRole('SUPERUSUARIO')")
@@ -78,6 +79,8 @@ public class SuscripcionController {
                 dto.plan(),
                 dto.ruc(),
                 dto.nombreCliente(),
+                dto.correoAdministrador(),
+                dto.rubroCodigo(),
                 dto.nombreTitularTarjeta(),
                 dto.numeroTarjeta(),
                 dto.fechaCaducidadTarjeta(),
