@@ -20,7 +20,7 @@ public class SunatController {
 
     @Operation(summary = "Reintentar envío de venta a SUNAT",
                description = "Solo funciona con ventas en estado ERROR_ENVIO. Lanza el envío en transacción separada.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PostMapping("/ventas/{ventaId}/reintentar")
     public ResponseEntity<Map<String, String>> reintentar(@PathVariable Long ventaId) {
         sunatVentaService.reintentarEnvio(ventaId);

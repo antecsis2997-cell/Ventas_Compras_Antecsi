@@ -100,7 +100,24 @@ public class DataInitializer {
             crearModuloSiNoExiste(moduloRepository, "MENSAJES",             "Mensajes",             "Mensajería interna",                      "mail",             14);
             crearModuloSiNoExiste(moduloRepository, "USUARIOS",             "Usuarios",             "Gestión de usuarios y permisos",          "manage_accounts",  15);
             crearModuloSiNoExiste(moduloRepository, "LOGISTICA_ENTREGAS",   "Entregas y Delivery",  "Gestión de entregas y delivery",           "local_shipping",   16);
+
+            migrarRolPlataformaASuperadmin(rolRepository);
         };
+    }
+
+    /**
+     * Antes el dueño de la solución usaba el nombre SUPERUSUARIO; ahora es SUPERADMIN.
+     * El nombre SUPERUSUARIO queda reservado al cliente multi-bodega.
+     */
+    private void migrarRolPlataformaASuperadmin(RolRepository rolRepository) {
+        if (rolRepository.findByNombre("SUPERADMIN").isEmpty()) {
+            rolRepository.findByNombre("SUPERUSUARIO").ifPresent(r -> {
+                r.setNombre("SUPERADMIN");
+                rolRepository.save(r);
+                log.info("Migración: rol SUPERUSUARIO (plataforma) renombrado a SUPERADMIN");
+            });
+        }
+        crearRolSiNoExiste(rolRepository, "SUPERUSUARIO");
     }
 
     private Rol crearRolSiNoExiste(RolRepository repo, String nombre) {

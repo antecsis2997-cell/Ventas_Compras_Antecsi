@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Sectores", description = "Sectores/sedes. Solo SUPERUSUARIO.")
+@Tag(name = "Sectores", description = "Sectores/sedes. Alta/baja: SUPERADMIN. Lectura: SUPERADMIN, SUPERUSUARIO cliente, ADMIN.")
 @RestController
 @RequestMapping("/api/sectores")
 @RequiredArgsConstructor
@@ -30,25 +30,25 @@ public class SectorController {
         return ResponseEntity.ok(service.listarParaPlataforma());
     }
 
-    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     @PostMapping
     public ResponseEntity<SectorResponseDTO> crear(@Valid @RequestBody SectorRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(dto));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @GetMapping
     public ResponseEntity<Page<SectorResponseDTO>> listar(Pageable pageable) {
         return ResponseEntity.ok(service.listar(pageable));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<SectorResponseDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<SectorResponseDTO> actualizar(
             @PathVariable Long id,
@@ -56,7 +56,7 @@ public class SectorController {
         return ResponseEntity.ok(service.actualizar(id, dto));
     }
 
-    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.eliminar(id);

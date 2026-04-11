@@ -1,6 +1,7 @@
 package com.antecsis.dto.usuario;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 public record UsuarioResponseDTO(
@@ -16,5 +17,7 @@ public record UsuarioResponseDTO(
     String rolNombre,
     Boolean activo,
     Set<String> modulos,
-    Boolean puedeRecuperarContrasena
+    Boolean puedeRecuperarContrasena,
+    /** Vacío salvo rol SUPERUSUARIO cliente. */
+    List<Long> sectoresGestionadosIds
 ) {}

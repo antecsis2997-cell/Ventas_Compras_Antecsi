@@ -36,14 +36,14 @@ public class RubroComercialController {
 
     @Operation(summary = "Listar todos los rubros (superusuario)")
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public List<RubroComercialDTO> listarTodos() {
         return service.listarTodos();
     }
 
     @Operation(summary = "Habilitar o deshabilitar rubro")
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<RubroComercialDTO> actualizarActivo(
             @PathVariable Long id,
             @Valid @RequestBody RubroActivoPatchDTO dto) {

@@ -20,14 +20,18 @@ import com.antecsis.dto.login.SolicitudRecuperacionResponseDTO;
 import com.antecsis.entity.Modulo;
 import com.antecsis.entity.PasswordResetToken;
 import com.antecsis.entity.RefreshToken;
+import com.antecsis.entity.Sector;
 import com.antecsis.entity.SolicitudRecuperacionContrasena;
 import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.PasswordResetTokenRepository;
 import com.antecsis.repository.RefreshTokenRepository;
+import com.antecsis.repository.SectorRepository;
 import com.antecsis.repository.SolicitudRecuperacionRepository;
 import com.antecsis.repository.UsuarioRepository;
+import com.antecsis.security.AccesoUsuario;
 import com.antecsis.security.JwtUtil;
+import com.antecsis.security.RolNombre;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
     private final UsuarioRepository usuarioRepo;
+    private final SectorRepository sectorRepo;
     private final RefreshTokenRepository refreshTokenRepo;
     private final PasswordResetTokenRepository passwordResetTokenRepo;
     private final SolicitudRecuperacionRepository solicitudRecuperacionRepo;
@@ -77,15 +82,21 @@ public class AuthService {
         log.info("Solicitud de recuperación creada para usuario: {}", user.getUsername());
     }
 
-    /** Listar solicitudes pendientes: SUPERUSUARIO ve todas; Admin/Soporte solo las de su sector. */
+    /** Listar solicitudes pendientes: SUPERADMIN ve todas; Superusuario cliente las de sus bodegas; Admin/Soporte las de su sector. */
     @Transactional(readOnly = true)
     public List<SolicitudRecuperacionResponseDTO> listarSolicitudesPendientes() {
         Usuario actual = obtenerUsuarioActual();
         validarAdminOSoporteDeSede(actual);
         List<SolicitudRecuperacionContrasena> list;
-        if ("SUPERUSUARIO".equals(actual.getRol() != null ? actual.getRol().getNombre() : null)) {
+        if (AccesoUsuario.esSuperadmin(actual)) {
             list = solicitudRecuperacionRepo.findByEstadoOrderByFechaSolicitudDesc(
                     SolicitudRecuperacionContrasena.Estado.PENDIENTE);
+        } else if (AccesoUsuario.esSuperusuarioCliente(actual)) {
+            var ids = AccesoUsuario.idsSectoresGestionados(actual);
+            list = solicitudRecuperacionRepo.findByEstadoOrderByFechaSolicitudDesc(
+                            SolicitudRecuperacionContrasena.Estado.PENDIENTE).stream()
+                    .filter(s -> s.getUsuario().getSede() != null && ids.contains(s.getUsuario().getSede().getId()))
+                    .toList();
         } else if (actual.getSede() != null) {
             list = solicitudRecuperacionRepo.findByUsuario_SedeAndEstadoOrderByFechaSolicitudDesc(
                     actual.getSede(), SolicitudRecuperacionContrasena.Estado.PENDIENTE);
@@ -105,11 +116,11 @@ public class AuthService {
         if (sol.getEstado() != SolicitudRecuperacionContrasena.Estado.PENDIENTE) {
             throw new BusinessException("La solicitud ya fue procesada");
         }
-        String rolActual = actual.getRol() != null ? actual.getRol().getNombre() : null;
-        if (!"SUPERUSUARIO".equals(rolActual)
-                && (actual.getSede() == null || sol.getUsuario().getSede() == null
-                    || !actual.getSede().getId().equals(sol.getUsuario().getSede().getId()))) {
-            throw new BusinessException("Solo puede aprobar solicitudes de su sector");
+        if (!AccesoUsuario.esSuperadmin(actual)) {
+            if (sol.getUsuario().getSede() == null
+                    || !AccesoUsuario.puedeGestionarSede(actual, sol.getUsuario().getSede().getId())) {
+                throw new BusinessException("Solo puede aprobar solicitudes de su sector");
+            }
         }
         Usuario user = sol.getUsuario();
         passwordResetTokenRepo.deleteByUsuarioId(user.getId());
@@ -146,11 +157,10 @@ public class AuthService {
         if (!Boolean.TRUE.equals(user.getActivo())) {
             throw new BusinessException("No se puede enviar recuperación a un usuario inactivo");
         }
-        String rolActual = actual.getRol() != null ? actual.getRol().getNombre() : null;
-        if (!"SUPERUSUARIO".equals(rolActual)
-                && (actual.getSede() == null || user.getSede() == null
-                    || !actual.getSede().getId().equals(user.getSede().getId()))) {
-            throw new BusinessException("Solo puede restablecer contraseña de usuarios de su sector");
+        if (!AccesoUsuario.esSuperadmin(actual)) {
+            if (user.getSede() == null || !AccesoUsuario.puedeGestionarSede(actual, user.getSede().getId())) {
+                throw new BusinessException("Solo puede restablecer contraseña de usuarios de su sector");
+            }
         }
         passwordResetTokenRepo.deleteByUsuarioId(user.getId());
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -177,11 +187,11 @@ public class AuthService {
         if (sol.getEstado() != SolicitudRecuperacionContrasena.Estado.PENDIENTE) {
             throw new BusinessException("La solicitud ya fue procesada");
         }
-        String rolRechazo = actual.getRol() != null ? actual.getRol().getNombre() : null;
-        if (!"SUPERUSUARIO".equals(rolRechazo)
-                && (actual.getSede() == null || sol.getUsuario().getSede() == null
-                    || !actual.getSede().getId().equals(sol.getUsuario().getSede().getId()))) {
-            throw new BusinessException("Solo puede rechazar solicitudes de su sector");
+        if (!AccesoUsuario.esSuperadmin(actual)) {
+            if (sol.getUsuario().getSede() == null
+                    || !AccesoUsuario.puedeGestionarSede(actual, sol.getUsuario().getSede().getId())) {
+                throw new BusinessException("Solo puede rechazar solicitudes de su sector");
+            }
         }
         sol.setEstado(SolicitudRecuperacionContrasena.Estado.RECHAZADO);
         sol.setAprobadoPor(actual);
@@ -192,8 +202,9 @@ public class AuthService {
 
     private void validarAdminOSoporteDeSede(Usuario u) {
         String rol = u.getRol() != null ? u.getRol().getNombre() : null;
-        if (!"ADMIN".equals(rol) && !"SOPORTE".equals(rol) && !"SUPERUSUARIO".equals(rol)) {
-            throw new BusinessException("Solo Admin o Soporte de su sector pueden gestionar solicitudes de recuperación");
+        if (!"ADMIN".equals(rol) && !"SOPORTE".equals(rol)
+                && !RolNombre.SUPERADMIN.equals(rol) && !RolNombre.SUPERUSUARIO.equals(rol)) {
+            throw new BusinessException("Solo roles autorizados pueden gestionar solicitudes de recuperación");
         }
     }
 
@@ -322,8 +333,14 @@ public class AuthService {
         String sedeNombre = user.getSede() != null ? user.getSede().getNombreSector() : null;
         String rolNombre = user.getRol() != null ? user.getRol().getNombre() : null;
 
+        List<Long> gestionIds = List.of();
+        if (user.getSectoresGestionados() != null && !user.getSectoresGestionados().isEmpty()) {
+            gestionIds = user.getSectoresGestionados().stream()
+                    .map(Sector::getId).sorted().toList();
+        }
+
         Set<String> modulos;
-        if ("SUPERUSUARIO".equals(rolNombre)) {
+        if (AccesoUsuario.esSuperadmin(user)) {
             modulos = Set.of("*");
         } else {
             modulos = user.getModulos().stream()
@@ -332,6 +349,26 @@ public class AuthService {
         }
 
         return new MeResponseDTO(user.getUsername(), user.getNombre(), user.getApellido(),
-                rolNombre, sedeId, sedeNombre, modulos);
+                rolNombre, sedeId, sedeNombre, modulos, gestionIds);
+    }
+
+    /** Solo rol SUPERUSUARIO (cliente multi-bodega): cambia la bodega activa para operaciones (ventas, etc.). */
+    @Transactional
+    public MeResponseDTO cambiarSedeActiva(Long sectorId) {
+        if (sectorId == null) {
+            throw new BusinessException("sectorId es obligatorio");
+        }
+        Usuario u = obtenerUsuarioActual();
+        if (!AccesoUsuario.esSuperusuarioCliente(u)) {
+            throw new BusinessException("Solo el Superusuario (multi-bodega) puede cambiar la sede activa.");
+        }
+        if (!AccesoUsuario.puedeGestionarSede(u, sectorId)) {
+            throw new BusinessException("No tiene acceso a esa bodega.");
+        }
+        Sector s = sectorRepo.findById(sectorId)
+                .orElseThrow(() -> new BusinessException("Bodega no encontrada"));
+        u.setSede(s);
+        usuarioRepo.save(u);
+        return getCurrentUser();
     }
 }

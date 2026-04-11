@@ -43,7 +43,7 @@ public class VentaController {
     }
 
     @Operation(summary = "Vista previa del siguiente número de comprobante", description = "Devuelve el número que se asignará al registrar (ej. B101-00000003). No consume la secuencia.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping("/siguiente-numero-comprobante")
     public ResponseEntity<java.util.Map<String, String>> siguienteNumeroComprobante(
             @Parameter(description = "BOLETA o FACTURA") @RequestParam String tipoDocumento) {
@@ -52,7 +52,7 @@ public class VentaController {
     }
 
     @Operation(summary = "Listar ventas", description = "Listado paginado. Opcionalmente filtra por sector. Requiere CAJERO, ADMIN o SUPERUSUARIO.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping
     public ResponseEntity<Page<VentaResponseDTO>> listar(
             Pageable pageable,
@@ -61,7 +61,7 @@ public class VentaController {
     }
 
     @Operation(summary = "Obtener venta por ID")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping("/{id}")
     public ResponseEntity<VentaResponseDTO> obtener(@Parameter(description = "ID de la venta") @PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));
@@ -73,14 +73,14 @@ public class VentaController {
             @ApiResponse(responseCode = "400", description = "Venta ya anulada"),
             @ApiResponse(responseCode = "404", description = "Venta no encontrada")
     })
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PatchMapping("/{id}/anular")
     public ResponseEntity<VentaResponseDTO> anular(@Parameter(description = "ID de la venta") @PathVariable Long id) {
         return ResponseEntity.ok(service.anular(id));
     }
 
     @Operation(summary = "Listar entregas pendientes", description = "Ventas con delivery pendiente. tipoEntrega: INMEDIATA (Delivery) o PROGRAMADA_3_5 (Entregas).")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
     @GetMapping("/entregas-pendientes")
     public ResponseEntity<Page<VentaResponseDTO>> listarEntregasPendientes(
             Pageable pageable,
@@ -90,14 +90,14 @@ public class VentaController {
     }
 
     @Operation(summary = "Marcar entrega como entregada", description = "Cuando Logística completa la entrega, la venta pasa a COMPLETADA.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
     @PatchMapping("/{id}/marcar-entregado")
     public ResponseEntity<VentaResponseDTO> marcarEntregado(@Parameter(description = "ID de la venta") @PathVariable Long id) {
         return ResponseEntity.ok(service.marcarEntregado(id));
     }
 
     @Operation(summary = "Métricas de entregas por vendedor", description = "Cantidad de entregas y monto total por vendedor. Para Logística.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA')")
     @GetMapping("/metricas-entregas-vendedor")
     public ResponseEntity<java.util.List<MetricasEntregasVendedorDTO>> metricasEntregasPorVendedor(
             @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId) {
@@ -108,7 +108,7 @@ public class VentaController {
             summary = "Detalle de entregas para Logística",
             description = "Lista de entregas (delivery) con vendedor, cliente, producto, cantidad y zona (distrito/provincia/pais)."
     )
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA')")
     @GetMapping("/logistica/entregas-detalle")
     public ResponseEntity<java.util.List<LogisticaEntregaDetalleDTO>> metricasLogisticaEntregas(
             @Parameter(description = "ID del sector (opcional)") @RequestParam(required = false) Long sectorId,
@@ -121,14 +121,14 @@ public class VentaController {
     }
 
     @Operation(summary = "Solicitar tracking", description = "Genera código de tracking para seguimiento del envío.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
     @PostMapping("/{id}/solicitar-tracking")
     public ResponseEntity<VentaResponseDTO> solicitarTracking(@PathVariable Long id) {
         return ResponseEntity.ok(service.solicitarTracking(id));
     }
 
     @Operation(summary = "Confirmar entrega", description = "Registra la confirmación del cliente: firma digital, correo, teléfono.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA','VENTAS')")
     @PostMapping("/{id}/confirmar-entrega")
     public ResponseEntity<VentaResponseDTO> confirmarEntrega(
             @PathVariable Long id,
@@ -139,7 +139,7 @@ public class VentaController {
     @Operation(
         summary = "Compras calificadas de un cliente",
         description = "Devuelve cuántas compras mayores a 50 soles tiene acumuladas el cliente en el sector del usuario autenticado. Útil para mostrar el progreso de la promoción antes de registrar una venta.")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO','VENTAS')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','CAJERO','VENTAS')")
     @GetMapping("/clientes/{clienteId}/compras-calificadas")
     public ResponseEntity<java.util.Map<String, Object>> comprasCalificadas(
             @Parameter(description = "ID del cliente") @PathVariable Long clienteId) {

@@ -2,6 +2,7 @@ package com.antecsis.dto.login;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.List;
 import java.util.Set;
 
 @Schema(description = "Usuario actual (autenticado)")
@@ -12,7 +13,7 @@ public record MeResponseDTO(
     String nombre,
     String apellido,
 
-    @Schema(description = "Nombre del rol: SUPERUSUARIO, ADMIN, CAJERO, etc.")
+    @Schema(description = "Nombre del rol: SUPERADMIN, SUPERUSUARIO, ADMIN, CAJERO, etc.")
     String rolNombre,
 
     @Schema(description = "ID de la sede asignada (null si no tiene)")
@@ -22,5 +23,8 @@ public record MeResponseDTO(
     String sedeNombre,
 
     @Schema(description = "Códigos de módulos a los que tiene acceso el usuario")
-    Set<String> modulos
+    Set<String> modulos,
+
+    @Schema(description = "IDs de bodegas gestionadas (solo rol SUPERUSUARIO cliente)")
+    List<Long> sectoresGestionadosIds
 ) {}

@@ -27,7 +27,7 @@ public class ConfiguracionFiscalController {
      * ADMIN        → lista solo su propia bodega.
      */
     @Operation(summary = "Listar configuraciones fiscales según rol")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @GetMapping
     public ResponseEntity<List<ConfiguracionFiscalResponseDTO>> listar(Authentication auth) {
         return ResponseEntity.ok(service.listarParaUsuario(auth.getName()));
@@ -38,7 +38,7 @@ public class ConfiguracionFiscalController {
      * ADMIN        → solo puede guardar para su propio sector (validado en el servicio).
      */
     @Operation(summary = "Crear o actualizar configuración fiscal")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PostMapping
     public ResponseEntity<ConfiguracionFiscalResponseDTO> guardar(
             @Valid @RequestBody ConfiguracionFiscalRequestDTO dto,
@@ -51,7 +51,7 @@ public class ConfiguracionFiscalController {
      * ADMIN        → solo puede activar la de su propia bodega.
      */
     @Operation(summary = "Activar configuración fiscal")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ConfiguracionFiscalResponseDTO> activar(
             @PathVariable Long id, Authentication auth) {
@@ -63,7 +63,7 @@ public class ConfiguracionFiscalController {
      * ADMIN        → solo puede desactivar la de su propia bodega.
      */
     @Operation(summary = "Desactivar configuración fiscal")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<ConfiguracionFiscalResponseDTO> desactivar(
             @PathVariable Long id, Authentication auth) {

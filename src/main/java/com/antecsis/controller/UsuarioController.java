@@ -34,19 +34,19 @@ import java.util.Map;
 public class UsuarioController {
     private final UsuarioService usuarioService;
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @GetMapping
     public ResponseEntity<Page<UsuarioResponseDTO>> listar(Pageable pageable) {
         return ResponseEntity.ok(usuarioService.listar(pageable));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerPorId(id));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PostMapping
     public ResponseEntity<Map<String, Object>> crearUsuario(@RequestBody @Valid UsuarioCreateRequest dto) {
         usuarioService.crearUsuario(dto);
@@ -55,13 +55,13 @@ public class UsuarioController {
         );
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> actualizar(@PathVariable Long id, @RequestBody UsuarioUpdateRequest dto) {
         return ResponseEntity.ok(usuarioService.actualizar(id, dto));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','SOPORTE')")
     @PatchMapping("/{id}/activo")
     public ResponseEntity<Void> actualizarActivo(@PathVariable Long id, @RequestBody java.util.Map<String, Boolean> body) {
         Boolean activo = body != null ? body.get("activo") : null;
@@ -72,7 +72,7 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','SOPORTE')")
     @PatchMapping("/{id}/puede-recuperar-contrasena")
     public ResponseEntity<Void> actualizarPuedeRecuperarContrasena(
             @PathVariable Long id, @RequestBody java.util.Map<String, Boolean> body) {
@@ -84,7 +84,7 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         usuarioService.eliminar(id);

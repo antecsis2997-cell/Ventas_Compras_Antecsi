@@ -26,7 +26,7 @@ public class SolicitudStockController {
     private final SolicitudStockService service;
     private final UsuarioService usuarioService;
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','CAJERO')")
     @PostMapping
     public ResponseEntity<SolicitudStockResponseDTO> crear(@Valid @RequestBody SolicitudStockRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(dto));
@@ -38,19 +38,19 @@ public class SolicitudStockController {
         return ResponseEntity.ok(service.listar(pageable));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA')")
     @PostMapping("/{id}/aprobar")
     public ResponseEntity<SolicitudStockResponseDTO> aprobar(@PathVariable Long id) {
         return ResponseEntity.ok(service.aprobar(id));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','LOGISTICA')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA')")
     @PostMapping("/{id}/desaprobar")
     public ResponseEntity<SolicitudStockResponseDTO> desaprobar(@PathVariable Long id) {
         return ResponseEntity.ok(service.desaprobar(id));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping("/usuarios-por-correo")
     public ResponseEntity<List<UsuarioCorreoDTO>> usuariosPorCorreo(@RequestParam String q) {
         return ResponseEntity.ok(usuarioService.buscarPorCorreo(q));

@@ -46,7 +46,19 @@ public class Usuario {
 
     @ManyToOne
     @JoinColumn(name = "sede_id")
-    private Sector sede;  // Sede de Cajero / Sede de Venta (documento)
+    private Sector sede;  // Sede activa (operación) / documento; para SUPERUSUARIO debe ser una de {@link #sectoresGestionados}
+
+    /**
+     * Bodegas/sedes que este usuario puede administrar (rol SUPERUSUARIO cliente).
+     * El dueño de plataforma (SUPERADMIN) asigna la lista según licencias compradas.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "usuario_sectores_gestion",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "sector_id")
+    )
+    private Set<Sector> sectoresGestionados = new HashSet<>();
 
     /** Usuario principal que creó este usuario (para reglas de licencias: max 3 Cajeros, 1 Ventas). */
     @Column(name = "usuario_principal_id")

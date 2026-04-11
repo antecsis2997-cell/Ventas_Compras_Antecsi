@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record UsuarioCreateRequest(
     @NotBlank
@@ -23,5 +24,8 @@ public record UsuarioCreateRequest(
     String correo,
 
     LocalDate fechaNacimiento,
-    Long sedeId
+    Long sedeId,
+
+    /** Solo para rol SUPERUSUARIO: bodegas licenciadas (debe incluir {@code sedeId} como sede activa). */
+    List<Long> sectoresGestionadosIds
 ) {}

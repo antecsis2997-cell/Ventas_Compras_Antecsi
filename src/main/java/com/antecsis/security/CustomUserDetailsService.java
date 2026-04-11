@@ -1,6 +1,8 @@
 package com.antecsis.security;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -34,9 +36,17 @@ public class CustomUserDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-        var authorities = usuario.getRol() != null
-                ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getNombre()))
-                : Collections.<GrantedAuthority>emptyList();
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        if (usuario.getRol() != null) {
+            String nombreRol = usuario.getRol().getNombre();
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + nombreRol));
+            if (AccesoUsuario.esSuperadmin(usuario) && RolNombre.SUPERUSUARIO.equals(nombreRol)) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + RolNombre.SUPERADMIN));
+            }
+        }
+        if (authorities.isEmpty()) {
+            authorities = Collections.emptyList();
+        }
 
         return User.builder()
                 .username(usuario.getUsername())

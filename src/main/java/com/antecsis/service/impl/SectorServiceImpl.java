@@ -2,8 +2,10 @@ package com.antecsis.service.impl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.SectorRepository;
 import com.antecsis.repository.UsuarioRepository;
+import com.antecsis.security.AccesoUsuario;
 import com.antecsis.service.SectorService;
 
 import lombok.RequiredArgsConstructor;
@@ -43,13 +46,32 @@ public class SectorServiceImpl implements SectorService {
     @Override
     @Transactional(readOnly = true)
     public Page<SectorResponseDTO> listar(Pageable pageable) {
-        return repository.findAll(pageable).map(this::toDTO);
+        Usuario u = usuarioActual();
+        if (AccesoUsuario.esSuperadmin(u)) {
+            return repository.findAll(pageable).map(this::toDTO);
+        }
+        if (AccesoUsuario.esSuperusuarioCliente(u)) {
+            var ids = AccesoUsuario.idsSectoresGestionados(u);
+            if (ids.isEmpty()) {
+                return Page.<SectorResponseDTO>empty(pageable);
+            }
+            return repository.findByIdIn(ids, pageable).map(this::toDTO);
+        }
+        if (u.getSede() != null) {
+            Optional<Sector> una = repository.findById(u.getSede().getId());
+            if (una.isPresent()) {
+                return new PageImpl<>(List.of(toDTO(una.get())), pageable, 1);
+            }
+            return Page.<SectorResponseDTO>empty(pageable);
+        }
+        return Page.<SectorResponseDTO>empty(pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SectorResponseDTO obtenerPorId(Long id) {
         Sector s = repository.findById(id).orElseThrow(() -> new BusinessException("Sector no existe"));
+        validarAccesoLectura(s.getId());
         return toDTO(s);
     }
 
@@ -70,9 +92,14 @@ public class SectorServiceImpl implements SectorService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Usuario u = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
-        String rol = u.getRol() != null ? u.getRol().getNombre() : "";
-        if ("SUPERUSUARIO".equals(rol)) {
+        if (AccesoUsuario.esSuperadmin(u)) {
             return repository.findAll().stream()
+                    .sorted(Comparator.comparing(Sector::getNombreSector, String.CASE_INSENSITIVE_ORDER))
+                    .map(this::toPlataforma)
+                    .toList();
+        }
+        if (AccesoUsuario.esSuperusuarioCliente(u)) {
+            return u.getSectoresGestionados().stream()
                     .sorted(Comparator.comparing(Sector::getNombreSector, String.CASE_INSENSITIVE_ORDER))
                     .map(this::toPlataforma)
                     .toList();
@@ -91,6 +118,22 @@ public class SectorServiceImpl implements SectorService {
             throw new BusinessException("No se puede eliminar el sector porque tiene usuarios asignados. Reasigne o elimine los usuarios primero.");
         }
         repository.deleteById(id);
+    }
+
+    private Usuario usuarioActual() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+    }
+
+    private void validarAccesoLectura(Long sectorId) {
+        Usuario u = usuarioActual();
+        if (AccesoUsuario.esSuperadmin(u)) {
+            return;
+        }
+        if (!AccesoUsuario.puedeGestionarSede(u, sectorId)) {
+            throw new BusinessException("No tiene acceso a este sector");
+        }
     }
 
     private SectorResponseDTO toDTO(Sector s) {

@@ -86,28 +86,28 @@ public class AuthController {
         service.solicitarRecuperacion(dto.correo());
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','SOPORTE')")
     @Operation(summary = "Listar solicitudes pendientes", description = "Admin, Soporte o Superusuario: listan solicitudes de recuperación pendientes de aprobar.")
     @GetMapping("/solicitudes-recuperacion")
     public ResponseEntity<List<SolicitudRecuperacionResponseDTO>> listarSolicitudesPendientes() {
         return ResponseEntity.ok(service.listarSolicitudesPendientes());
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','SOPORTE')")
     @Operation(summary = "Aprobar solicitud y enviar correo", description = "Admin/Soporte aprueba la solicitud; se envía el correo de recuperación al usuario.")
     @PostMapping("/aprobar-recuperacion/{id}")
     public ResponseEntity<AprobarRecuperacionResponseDTO> aprobarRecuperacion(@PathVariable Long id) {
         return ResponseEntity.ok(service.aprobarRecuperacion(id));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','SOPORTE')")
     @Operation(summary = "Enviar recuperación directa", description = "Admin/Soporte envía correo de recuperación directamente a un usuario.")
     @PostMapping("/enviar-recuperacion/{usuarioId}")
     public ResponseEntity<AprobarRecuperacionResponseDTO> enviarRecuperacion(@PathVariable Long usuarioId) {
         return ResponseEntity.ok(service.enviarRecuperacionDirecta(usuarioId));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','SOPORTE')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','SOPORTE')")
     @Operation(summary = "Rechazar solicitud", description = "Admin/Soporte rechaza la solicitud de recuperación.")
     @PostMapping("/rechazar-recuperacion/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

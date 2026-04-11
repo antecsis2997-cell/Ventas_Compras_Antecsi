@@ -40,13 +40,13 @@ public class CompraController {
     }
 
     @Operation(summary = "Obtener compra por ID")
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN','CAJERO')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','CAJERO')")
     @GetMapping("/{id}")
     public ResponseEntity<CompraResponseDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @PreAuthorize("hasAnyRole('SUPERUSUARIO','ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN')")
     @PatchMapping("/{id}/anular")
     public ResponseEntity<CompraResponseDTO> anular(@PathVariable Long id) {
         return ResponseEntity.ok(service.anular(id));

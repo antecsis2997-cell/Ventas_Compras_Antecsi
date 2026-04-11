@@ -66,11 +66,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/sectores/plataforma").authenticated()
                         .requestMatchers(SecurityPaths.PUBLIC).permitAll()
                         .requestMatchers("/api/usuarios", "/api/usuarios/**")
-                        .hasAnyAuthority("ROLE_SUPERUSUARIO", "ROLE_ADMIN")
-                        .requestMatchers("/api/sectores", "/api/sectores/**")
-                        .hasAuthority("ROLE_SUPERUSUARIO")
+                        .hasAnyAuthority("ROLE_SUPERADMIN", "ROLE_SUPERUSUARIO", "ROLE_ADMIN")
                         .requestMatchers("/api/suscripciones", "/api/suscripciones/**")
-                        .hasAuthority("ROLE_SUPERUSUARIO")
+                        .hasAuthority("ROLE_SUPERADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -13,6 +13,7 @@ import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.ActivacionLicenciaRepository;
 import com.antecsis.repository.SuscripcionRepository;
 import com.antecsis.repository.UsuarioRepository;
+import com.antecsis.security.AccesoUsuario;
 import com.antecsis.security.LicenseJwtUtil;
 import com.antecsis.service.LicenciaCuentaService;
 
@@ -35,11 +36,11 @@ public class LicenciaCuentaServiceImpl implements LicenciaCuentaService {
     @Transactional(readOnly = true)
     public LicenciaEstadoResponseDTO estadoMiCuenta() {
         Usuario u = usuarioActual();
-        boolean superUser = "SUPERUSUARIO".equals(u.getRol() != null ? u.getRol().getNombre() : null);
+        boolean superPlataforma = AccesoUsuario.esSuperadmin(u);
 
         if (u.getSede() == null) {
-            String msg = superUser
-                    ? "Como superusuario no tiene sede asignada; la licencia se asocia a la sucursal de la suscripción."
+            String msg = superPlataforma
+                    ? "Como SUPERADMIN no tiene sede asignada; la licencia se asocia a la sucursal de la suscripción."
                     : "Su usuario no tiene sede asignada. Contacte al administrador.";
             return new LicenciaEstadoResponseDTO(false, null, null, "N/D", null, false, null, msg);
         }
@@ -81,7 +82,7 @@ public class LicenciaCuentaServiceImpl implements LicenciaCuentaService {
     @Transactional
     public void activar(ActivarLicenciaRequestDTO dto) {
         Usuario u = usuarioActual();
-        boolean superUser = "SUPERUSUARIO".equals(u.getRol() != null ? u.getRol().getNombre() : null);
+        boolean superPlataforma = AccesoUsuario.esSuperadmin(u);
 
         Claims claims;
         try {
@@ -108,7 +109,7 @@ public class LicenciaCuentaServiceImpl implements LicenciaCuentaService {
             throw new BusinessException("La suscripción asociada está vencida");
         }
 
-        if (!superUser) {
+        if (!superPlataforma) {
             if (u.getSede() == null) {
                 throw new BusinessException("Su usuario no tiene sede asignada");
             }

@@ -18,6 +18,8 @@ import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.ProveedorRepository;
 import com.antecsis.repository.SuscripcionRepository;
 import com.antecsis.repository.UsuarioRepository;
+import com.antecsis.security.AccesoUsuario;
+import com.antecsis.security.RolNombre;
 import com.antecsis.service.EmailService;
 import com.antecsis.service.NotificacionBandejaService;
 import com.antecsis.service.ProveedorService;
@@ -129,9 +131,15 @@ public class ProveedorServiceImpl implements ProveedorService {
                 destinos.add(su.getCorreoReceptor().trim().toLowerCase());
             }
         });
-        for (Usuario adm : usuarioRepository.findBySede_IdAndRol_Nombre(sec.getId(), "ADMIN")) {
+        for (Usuario adm : usuarioRepository.findBySede_IdAndRol_Nombre(sec.getId(), RolNombre.ADMIN)) {
             if (adm.getCorreo() != null && !adm.getCorreo().isBlank()) {
                 destinos.add(adm.getCorreo().trim().toLowerCase());
+            }
+        }
+        for (Usuario su : usuarioRepository.findBySectoresGestionados_Id(sec.getId())) {
+            if (su.getRol() != null && RolNombre.SUPERUSUARIO.equals(su.getRol().getNombre())
+                    && su.getCorreo() != null && !su.getCorreo().isBlank()) {
+                destinos.add(su.getCorreo().trim().toLowerCase());
             }
         }
         String nombreSede = sec.getNombreSector();
@@ -150,11 +158,17 @@ public class ProveedorServiceImpl implements ProveedorService {
     }
 
     private void verificarAccesoSector(Sector sectorEntidad) {
-        Long sectorIdUsuario = obtenerSectorIdAutenticado();
-        if (sectorIdUsuario != null && sectorEntidad != null
-                && !sectorIdUsuario.equals(sectorEntidad.getId())) {
-            throw new BusinessException("No tiene acceso a este recurso");
+        if (sectorEntidad == null) {
+            return;
         }
+        Usuario u = obtenerUsuarioAutenticado();
+        if (AccesoUsuario.esSuperadmin(u)) {
+            return;
+        }
+        if (AccesoUsuario.puedeGestionarSede(u, sectorEntidad.getId())) {
+            return;
+        }
+        throw new BusinessException("No tiene acceso a este recurso");
     }
 
     private Long obtenerSectorIdAutenticado() {

@@ -16,6 +16,7 @@ import com.antecsis.entity.Usuario;
 import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.ModuloRepository;
 import com.antecsis.repository.UsuarioRepository;
+import com.antecsis.security.AccesoUsuario;
 import com.antecsis.service.PermisoService;
 
 import lombok.RequiredArgsConstructor;
@@ -75,7 +76,7 @@ public class PermisoServiceImpl implements PermisoService {
                 .map(Modulo::getCodigo)
                 .collect(Collectors.toSet());
 
-        if (esSuperusuario(actual)) {
+        if (AccesoUsuario.esSuperadmin(actual)) {
             codigosPermitidos = moduloRepository.findByActivoTrueOrderByOrdenAsc()
                     .stream().map(Modulo::getCodigo).collect(Collectors.toSet());
         }
@@ -102,17 +103,13 @@ public class PermisoServiceImpl implements PermisoService {
                 .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
     }
 
-    private boolean esSuperusuario(Usuario u) {
-        return u.getRol() != null && "SUPERUSUARIO".equals(u.getRol().getNombre());
-    }
-
-    private boolean esAdmin(Usuario u) {
-        return u.getRol() != null && "ADMIN".equals(u.getRol().getNombre());
-    }
-
     private void validarAcceso(Usuario actual, Usuario target) {
-        if (esSuperusuario(actual)) return;
-        if (esAdmin(actual)) {
+        if (AccesoUsuario.esSuperadmin(actual)) return;
+        if (AccesoUsuario.esSuperusuarioCliente(actual)) {
+            if (AccesoUsuario.puedeGestionarUsuarioPorSede(actual, target)) return;
+            throw new BusinessException("Solo puede gestionar permisos de usuarios de sus bodegas");
+        }
+        if (AccesoUsuario.esAdmin(actual)) {
             if (actual.getSede() == null)
                 throw new BusinessException("No tiene sede asignada");
             if (target.getSede() == null || !target.getSede().getId().equals(actual.getSede().getId()))

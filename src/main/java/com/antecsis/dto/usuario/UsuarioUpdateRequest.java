@@ -1,6 +1,7 @@
 package com.antecsis.dto.usuario;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record UsuarioUpdateRequest(
     String nombre,
@@ -13,5 +14,8 @@ public record UsuarioUpdateRequest(
     /** Si se envía y no está vacío, se actualiza la contraseña. */
     String password,
     /** Si true, el usuario verá el link "Recuperar contraseña" cuando falle el login. */
-    Boolean puedeRecuperarContrasena
+    Boolean puedeRecuperarContrasena,
+
+    /** Solo SUPERADMIN: actualiza bodegas del usuario SUPERUSUARIO cliente. */
+    List<Long> sectoresGestionadosIds
 ) {}

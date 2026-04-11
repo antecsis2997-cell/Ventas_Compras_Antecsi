@@ -3,15 +3,20 @@ package com.antecsis.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.antecsis.dto.licencia.ActivarLicenciaRequestDTO;
 import com.antecsis.dto.licencia.LicenciaEstadoResponseDTO;
+import com.antecsis.dto.login.CambiarSedeActivaRequestDTO;
+import com.antecsis.dto.login.MeResponseDTO;
 import com.antecsis.dto.notificacion.NotificacionBandejaDTO;
+import com.antecsis.service.AuthService;
 import com.antecsis.service.LicenciaCuentaService;
 import com.antecsis.service.NotificacionBandejaService;
 
@@ -26,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MiCuentaController {
 
+    private final AuthService authService;
     private final LicenciaCuentaService licenciaCuentaService;
     private final NotificacionBandejaService notificacionBandejaService;
 
@@ -46,5 +52,12 @@ public class MiCuentaController {
     @GetMapping("/bandeja")
     public List<NotificacionBandejaDTO> bandeja() {
         return notificacionBandejaService.listarParaUsuarioAutenticado();
+    }
+
+    @Operation(summary = "Cambiar bodega activa (solo Superusuario multi-bodega)")
+    @PutMapping("/sede-activa")
+    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    public ResponseEntity<MeResponseDTO> cambiarSedeActiva(@Valid @RequestBody CambiarSedeActivaRequestDTO dto) {
+        return ResponseEntity.ok(authService.cambiarSedeActiva(dto.sectorId()));
     }
 }

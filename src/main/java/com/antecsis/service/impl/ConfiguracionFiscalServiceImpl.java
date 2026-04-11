@@ -9,6 +9,7 @@ import com.antecsis.exception.BusinessException;
 import com.antecsis.repository.ConfiguracionFiscalRepository;
 import com.antecsis.repository.SectorRepository;
 import com.antecsis.repository.UsuarioRepository;
+import com.antecsis.security.AccesoUsuario;
 import com.antecsis.service.ConfiguracionFiscalService;
 import com.antecsis.service.CryptoService;
 import lombok.RequiredArgsConstructor;
@@ -27,32 +28,29 @@ public class ConfiguracionFiscalServiceImpl implements ConfiguracionFiscalServic
     private final UsuarioRepository usuarioRepo;
     private final CryptoService crypto;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Listar
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Override
     public List<ConfiguracionFiscalResponseDTO> listarParaUsuario(String username) {
         Usuario usuario = resolverUsuario(username);
 
-        if (esSuperusuario(usuario)) {
-            // SUPERUSUARIO ve todas las configuraciones
+        if (esSuperadminPlataforma(usuario)) {
             return repo.findAll().stream().map(this::toDTO).toList();
         }
+        if (AccesoUsuario.esSuperusuarioCliente(usuario)) {
+            var ids = AccesoUsuario.idsSectoresGestionados(usuario);
+            return repo.findAll().stream()
+                    .filter(c -> c.getSector() != null && ids.contains(c.getSector().getId()))
+                    .map(this::toDTO)
+                    .toList();
+        }
 
-        // ADMIN solo ve la configuración de su propio sector
         if (usuario.getSede() == null) {
-            return List.of(); // Sin sede asignada, sin configuración
+            return List.of();
         }
         return repo.findBySectorId(usuario.getSede().getId())
                 .map(this::toDTO)
                 .map(List::of)
                 .orElse(List.of());
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Guardar (crear o actualizar)
-    // ─────────────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
@@ -61,14 +59,11 @@ public class ConfiguracionFiscalServiceImpl implements ConfiguracionFiscalServic
 
         Long sectorIdDestino = dto.sectorId();
 
-        if (!esSuperusuario(usuario)) {
-            // ADMIN solo puede configurar su propio sector
+        if (!esSuperadminPlataforma(usuario) && !puedeConfigurarSector(usuario, sectorIdDestino)) {
             if (usuario.getSede() == null) {
                 throw new BusinessException("No tiene una bodega asignada. Contacte al administrador del sistema.");
             }
-            if (!usuario.getSede().getId().equals(sectorIdDestino)) {
-                throw new BusinessException("Solo puede configurar la información fiscal de su propia bodega.");
-            }
+            throw new BusinessException("Solo puede configurar la información fiscal de sus bodegas autorizadas.");
         }
 
         Sector sector = sectorRepo.findById(sectorIdDestino)
@@ -89,15 +84,15 @@ public class ConfiguracionFiscalServiceImpl implements ConfiguracionFiscalServic
         config.setSolUsuarioCifrado(crypto.cifrar(dto.solUsuario()));
         config.setSolClaveCifrada(crypto.cifrar(dto.solClave()));
 
-        // Las series solo las puede modificar el ADMIN de la bodega.
-        // Si el SUPERUSUARIO guarda una config nueva, se inicializan con valores por defecto (B001/F001).
-        // Si ya existe la config, el SUPERUSUARIO no puede cambiarlas.
-        if (!esSuperusuario(usuario)) {
+        // Series: SUPERADMIN plataforma no modifica series existentes; ADMIN y Superusuario cliente sí.
+        if (esSuperadminPlataforma(usuario)) {
+            if (config.getId() == null) {
+                config.setSerieBoleta("B001");
+                config.setSerieFactura("F001");
+            }
+        } else {
             config.setSerieBoleta(dto.serieBoleta().toUpperCase());
             config.setSerieFactura(dto.serieFactura().toUpperCase());
-        } else if (config.getId() == null) {
-            config.setSerieBoleta("B001");
-            config.setSerieFactura("F001");
         }
 
         config.setAmbiente(dto.ambiente());
@@ -112,10 +107,6 @@ public class ConfiguracionFiscalServiceImpl implements ConfiguracionFiscalServic
 
         return toDTO(repo.save(config));
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Activar / Desactivar
-    // ─────────────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
@@ -133,41 +124,34 @@ public class ConfiguracionFiscalServiceImpl implements ConfiguracionFiscalServic
         return toDTO(repo.save(config));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Uso interno SUNAT
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Override
     public Optional<ConfiguracionFiscal> buscarActivaPorSector(Long sectorId) {
         return repo.findBySectorIdAndActivoTrue(sectorId);
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helpers privados
-    // ─────────────────────────────────────────────────────────────────────────
 
     private Usuario resolverUsuario(String username) {
         return usuarioRepo.findByUsername(username)
                 .orElseThrow(() -> new BusinessException("Usuario autenticado no encontrado"));
     }
 
-    private boolean esSuperusuario(Usuario usuario) {
-        return usuario.getRol() != null && "SUPERUSUARIO".equals(usuario.getRol().getNombre());
+    private boolean esSuperadminPlataforma(Usuario usuario) {
+        return AccesoUsuario.esSuperadmin(usuario);
     }
 
-    /**
-     * Obtiene la configuración por ID y valida que el ADMIN solo acceda a la suya.
-     */
+    private boolean puedeConfigurarSector(Usuario usuario, Long sectorId) {
+        return AccesoUsuario.puedeGestionarSede(usuario, sectorId);
+    }
+
     private ConfiguracionFiscal resolverConfigConPermisos(Long id, String username) {
         ConfiguracionFiscal config = repo.findById(id)
                 .orElseThrow(() -> new BusinessException("Configuración fiscal no encontrada"));
 
         Usuario usuario = resolverUsuario(username);
-        if (!esSuperusuario(usuario)) {
-            if (usuario.getSede() == null ||
-                !usuario.getSede().getId().equals(config.getSector().getId())) {
-                throw new BusinessException("No tiene permiso para modificar la configuración de otra bodega.");
-            }
+        if (esSuperadminPlataforma(usuario)) {
+            return config;
+        }
+        if (config.getSector() == null || !puedeConfigurarSector(usuario, config.getSector().getId())) {
+            throw new BusinessException("No tiene permiso para modificar la configuración de otra bodega.");
         }
         return config;
     }
