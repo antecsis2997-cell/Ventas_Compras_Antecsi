@@ -2,6 +2,7 @@ package com.antecsis.service;
 
 import java.util.List;
 
+import com.antecsis.dto.sector.SectorActivoRequestDTO;
 import com.antecsis.dto.sector.SectorPlataformaDTO;
 import com.antecsis.dto.sector.SectorRequestDTO;
 import com.antecsis.dto.sector.SectorResponseDTO;
@@ -13,6 +14,7 @@ public interface SectorService {
     Page<SectorResponseDTO> listar(Pageable pageable);
     SectorResponseDTO obtenerPorId(Long id);
     SectorResponseDTO actualizar(Long id, SectorRequestDTO dto);
+    SectorResponseDTO cambiarActivo(Long id, SectorActivoRequestDTO dto);
     void eliminar(Long id);
 
     /** Tarjetas de sede para la plataforma principal (superusuario: todas; resto: su sede). */

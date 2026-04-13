@@ -367,6 +367,9 @@ public class AuthService {
         }
         Sector s = sectorRepo.findById(sectorId)
                 .orElseThrow(() -> new BusinessException("Bodega no encontrada"));
+        if (!s.isActivo()) {
+            throw new BusinessException("Esta bodega está desactivada.");
+        }
         u.setSede(s);
         usuarioRepo.save(u);
         return getCurrentUser();

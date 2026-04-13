@@ -5,5 +5,6 @@ public record SectorPlataformaDTO(
         String nombreSector,
         String telefono,
         String direccion,
-        String videoPromocionalUrl
+        String videoPromocionalUrl,
+        boolean activo
 ) {}

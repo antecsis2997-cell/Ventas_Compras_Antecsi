@@ -30,7 +30,8 @@ public class OpenApiConfig {
                         .description("API REST para el sistema de compra y venta de productos (bodegas). " +
                                 "Incluye: Dashboard, Ventas, Compras, Productos, Clientes, Proveedores, " +
                                 "Usuarios, Sectores, Localizaciones, Historial de pedidos, Solicitudes de producto, Mensajes/CHAT. " +
-                                "Autenticación JWT: use POST /api/auth/login y pegue el token en **Authorize**.")
+                                "Autenticación JWT: use POST /api/auth/login y pegue el token en **Authorize**. " +
+                                "Copyright © 2026 ANTECSIS. Todos los derechos reservados.")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("ANTECSIS")

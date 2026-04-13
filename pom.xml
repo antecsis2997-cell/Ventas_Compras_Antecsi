@@ -13,13 +13,18 @@
 	<artifactId>ventas</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ventas</name>
-	<description>Proyecto compra y venta</description>
+	<description>Sistema de compra y venta para bodegas (ANTECSIS). Copyright (c) 2026 ANTECSIS. Todos los derechos reservados.</description>
+	<organization>
+		<name>ANTECSIS</name>
+	</organization>
 	<url />
 	<licenses>
 		<license />
 	</licenses>
 	<developers>
-		<developer />
+		<developer>
+			<name>ANTECSIS</name>
+		</developer>
 	</developers>
 	<scm>
 		<connection />

@@ -39,4 +39,11 @@ public class Sector {
     /** URL de video promocional (YouTube, Vimeo, archivo público, etc.). */
     @Column(name = "video_promocional_url", length = 500)
     private String videoPromocionalUrl;
+
+    /**
+     * Si false, la bodega no se ofrece en plataforma ni en listados operativos de clientes.
+     * {@code columnDefinition} hace que el DDL incluya DEFAULT true, requerido en PostgreSQL si la tabla ya tiene filas.
+     */
+    @Column(name = "activo", nullable = false, columnDefinition = "boolean default true not null")
+    private boolean activo = true;
 }

@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.antecsis.dto.sector.SectorActivoRequestDTO;
 import com.antecsis.dto.sector.SectorPlataformaDTO;
 import com.antecsis.dto.sector.SectorRequestDTO;
 import com.antecsis.dto.sector.SectorResponseDTO;
@@ -39,6 +40,7 @@ public class SectorServiceImpl implements SectorService {
         s.setTelefono(dto.telefono());
         s.setDireccion(dto.direccion());
         s.setVideoPromocionalUrl(normalizeUrl(dto.videoPromocionalUrl()));
+        s.setActivo(true);
         Sector guardado = repository.save(s);
         return toDTO(guardado);
     }
@@ -55,7 +57,7 @@ public class SectorServiceImpl implements SectorService {
             if (ids.isEmpty()) {
                 return Page.<SectorResponseDTO>empty(pageable);
             }
-            return repository.findByIdIn(ids, pageable).map(this::toDTO);
+            return repository.findByIdInAndActivoTrue(ids, pageable).map(this::toDTO);
         }
         if (u.getSede() != null) {
             Optional<Sector> una = repository.findById(u.getSede().getId());
@@ -87,6 +89,14 @@ public class SectorServiceImpl implements SectorService {
     }
 
     @Override
+    @Transactional
+    public SectorResponseDTO cambiarActivo(Long id, SectorActivoRequestDTO dto) {
+        Sector s = repository.findById(id).orElseThrow(() -> new BusinessException("Sector no existe"));
+        s.setActivo(Boolean.TRUE.equals(dto.activo()));
+        return toDTO(repository.save(s));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<SectorPlataformaDTO> listarParaPlataforma() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -94,18 +104,24 @@ public class SectorServiceImpl implements SectorService {
                 .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
         if (AccesoUsuario.esSuperadmin(u)) {
             return repository.findAll().stream()
+                    .filter(Sector::isActivo)
                     .sorted(Comparator.comparing(Sector::getNombreSector, String.CASE_INSENSITIVE_ORDER))
                     .map(this::toPlataforma)
                     .toList();
         }
         if (AccesoUsuario.esSuperusuarioCliente(u)) {
             return u.getSectoresGestionados().stream()
+                    .filter(Sector::isActivo)
                     .sorted(Comparator.comparing(Sector::getNombreSector, String.CASE_INSENSITIVE_ORDER))
                     .map(this::toPlataforma)
                     .toList();
         }
         if (u.getSede() != null) {
-            return List.of(toPlataforma(u.getSede()));
+            Sector sede = u.getSede();
+            if (!sede.isActivo()) {
+                return List.of();
+            }
+            return List.of(toPlataforma(sede));
         }
         return List.of();
     }
@@ -142,7 +158,8 @@ public class SectorServiceImpl implements SectorService {
                 s.getNombreSector(),
                 s.getTelefono(),
                 s.getDireccion(),
-                s.getVideoPromocionalUrl()
+                s.getVideoPromocionalUrl(),
+                s.isActivo()
         );
     }
 
@@ -152,7 +169,8 @@ public class SectorServiceImpl implements SectorService {
                 s.getNombreSector(),
                 s.getTelefono(),
                 s.getDireccion(),
-                s.getVideoPromocionalUrl()
+                s.getVideoPromocionalUrl(),
+                s.isActivo()
         );
     }
 
