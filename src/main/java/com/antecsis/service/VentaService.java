@@ -25,6 +25,7 @@ public interface VentaService {
             Long vendedorId,
             String distrito,
             String provincia,
+            String departamento,
             String pais
     );
 

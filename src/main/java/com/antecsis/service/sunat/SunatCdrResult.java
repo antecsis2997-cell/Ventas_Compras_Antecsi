@@ -10,7 +10,7 @@ import lombok.Getter;
 @Builder
 public class SunatCdrResult {
 
-    /** Código de respuesta SUNAT: "0"=aceptado, "2xxx"-"3xxx"=rechazado */
+    /** Código {@code cbc:ResponseCode} del CDR de recepción: {@code "0"} = aceptada; distinto de cero = rechazo */
     private String codigoRespuesta;
 
     /** Descripción del CDR */
@@ -19,10 +19,10 @@ public class SunatCdrResult {
     /** Para envíos asíncronos (boletas/resumen diario): ticket de consulta */
     private String ticket;
 
-    /** true si fue aceptado (código == "0") */
+    /** true si fue aceptado ({@code codigoRespuesta} == {@code "0"}) */
     private boolean aceptado;
 
-    /** true si fue aceptado con observaciones */
+    /** Legado (Builder); la recepción SUNAT no distingue “observación” en este código */
     private boolean conObservaciones;
 
     /** Observaciones adicionales de SUNAT */

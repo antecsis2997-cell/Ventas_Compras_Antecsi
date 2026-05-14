@@ -258,7 +258,8 @@ public class SunatSoapService {
                 return SunatCdrResult.errorEnvio("El CDR extraído del ZIP está vacío");
             }
 
-            log.debug("CDR XML extraído (primeros 300 chars): {}", cdrXml.substring(0, Math.min(300, cdrXml.length())));
+            //log.debug("CDR XML extraído (primeros 300 chars): {}", cdrXml.substring(0, Math.min(300, cdrXml.length())));
+            log.debug(cdrXml);
             return parsearCdrXml(cdrXml);
 
         } catch (BusinessException e) {
@@ -337,7 +338,21 @@ public class SunatSoapService {
         }
     }
 
-    /** Lee el XML del CDR y extrae código de respuesta y descripción */
+    /**
+     * Lee el XML del CDR (Constancia de Recepción, {@code ApplicationResponse} UBL 2.0).
+     * <p>
+     * Reglas según SEE — Manual del programador SUNAT — Constancia de recepción / Anexo 1:
+     * <ul>
+     *   <li>Anexo 1 literal B.13 {@code cac:DocumentResponse} / {@code cbc:ResponseCode}: valor {@code "0"} =
+     *       recepción <strong>aceptada</strong>; valor distinto de cero = <strong>rechazada</strong> con el código
+     *       de error de rechazo.</li>
+     *   <li>Literal B.10 {@code cbc:Note}: advertencias (p. ej. códigos 4000+) que <strong>no</strong> implican
+     *       rechazo; ver también numeral 3 “Observaciones” del mismo manual.</li>
+     * </ul>
+     * No usar la presencia de {@code DocumentResponse} como señal de “observado”: en el caso peruano tiene
+     * cardinalidad 1..n y forma parte del flujo estándar de constancia de recepción.
+     * @see <a href="https://cpe.sunat.gob.pe/sites/default/files/inline-files/manual_programador%20%281%29.pdf">Manual del programador (SUNAT)</a>
+     */
     private SunatCdrResult parsearCdrXml(String cdrXml) {
         try {
             Document cdr = parsearXml(cdrXml);
@@ -352,12 +367,12 @@ public class SunatSoapService {
             String desc = descs.getLength() > 0 ? descs.item(0).getTextContent().trim() : "";
 
             if ("0".equals(code)) {
-                // Verificar si hay observaciones
-                NodeList obs = cdr.getElementsByTagName("cac:DocumentResponse");
+                // Norma SUNAT: cbc:ResponseCode "0" = recepción aceptada; distinto de cero = rechazado
+                // con el código del error de rechazo. No hay estado intermedio de "observado" por este código.
                 return SunatCdrResult.builder()
                         .codigoRespuesta(code).descripcion(desc)
                         .aceptado(true)
-                        .conObservaciones(obs.getLength() > 0)
+                        .conObservaciones(false)
                         .build();
             }
             return SunatCdrResult.rechazado(code, desc);
@@ -366,7 +381,6 @@ public class SunatSoapService {
             return SunatCdrResult.errorEnvio("Error parseando CDR XML: " + e.getMessage());
         }
     }
-
     // ─────────────────────────────────────────────────────────────────────
     // ZIP helpers
     // ─────────────────────────────────────────────────────────────────────

@@ -17,5 +17,6 @@ public record ClienteRequestDTO(
     String direccion,
     String distrito,
     String provincia,
+    String departamento,
     String pais
 ) {}

@@ -135,8 +135,7 @@ public class SunatVentaService {
             venta.setSunatTicket(cdr.getTicket());
             actualizarEstado(venta, SunatEstadoCdr.PENDIENTE, null, "Ticket recibido: " + cdr.getTicket(), cdr.getTicket());
         } else if (cdr.isAceptado()) {
-            SunatEstadoCdr estado = cdr.isConObservaciones() ? SunatEstadoCdr.OBSERVADO : SunatEstadoCdr.ACEPTADO;
-            actualizarEstado(venta, estado, cdr.getCodigoRespuesta(), cdr.getDescripcion(), null);
+            actualizarEstado(venta, SunatEstadoCdr.ACEPTADO, cdr.getCodigoRespuesta(), cdr.getDescripcion(), null);
         } else if ("ERROR".equals(cdr.getCodigoRespuesta())) {
             actualizarEstado(venta, SunatEstadoCdr.ERROR_ENVIO, cdr.getCodigoRespuesta(), cdr.getDescripcion(), null);
         } else {

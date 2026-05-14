@@ -157,10 +157,22 @@ public class VentaServiceImpl implements VentaService {
                     && (venta.getDireccionEntrega() == null || venta.getDireccionEntrega().isBlank())) {
                 throw new BusinessException("La dirección de entrega es obligatoria para entregas de 5 a 6 meses.");
             }
+            String dptoEnt = dto.departamentoEntrega() != null ? dto.departamentoEntrega().trim() : "";
+            String paisEnt = dto.paisEntrega() != null ? dto.paisEntrega().trim() : "";
+            if (dptoEnt.isEmpty()) {
+                throw new BusinessException("El departamento de entrega es obligatorio cuando requiere delivery.");
+            }
+            if (paisEnt.isEmpty()) {
+                throw new BusinessException("El país de entrega es obligatorio cuando requiere delivery.");
+            }
+            venta.setDepartamentoEntrega(dptoEnt);
+            venta.setPaisEntrega(paisEnt);
         } else {
             venta.setEstado(EstadoVenta.COMPLETADA);
             venta.setTipoEntrega(null);
             venta.setDireccionEntrega(null);
+            venta.setDepartamentoEntrega(null);
+            venta.setPaisEntrega(null);
             venta.setEstadoEntrega(null);
         }
 
@@ -496,6 +508,7 @@ public class VentaServiceImpl implements VentaService {
             Long vendedorId,
             String distrito,
             String provincia,
+            String departamento,
             String pais
     ) {
         List<Venta> entregadas = ventaRepo.findByRequiereDeliveryTrueAndEstadoEntrega(EstadoEntrega.ENTREGADO);
@@ -508,6 +521,7 @@ public class VentaServiceImpl implements VentaService {
 
         String distritoLower = distrito != null ? distrito.trim().toLowerCase() : null;
         String provinciaLower = provincia != null ? provincia.trim().toLowerCase() : null;
+        String departamentoLower = departamento != null ? departamento.trim().toLowerCase() : null;
         String paisLower = pais != null ? pais.trim().toLowerCase() : null;
 
         return entregadas.stream()
@@ -516,12 +530,16 @@ public class VentaServiceImpl implements VentaService {
                     Cliente c = v.getCliente();
                     String cDistrito = c != null && c.getDistrito() != null ? c.getDistrito() : "";
                     String cProvincia = c != null && c.getProvincia() != null ? c.getProvincia() : "";
-                    String cPais = c != null && c.getPais() != null ? c.getPais() : "";
+                    String cDepartamento = coalesceUbicacion(v.getDepartamentoEntrega(), c != null ? c.getDepartamento() : null);
+                    String cPais = coalesceUbicacion(v.getPaisEntrega(), c != null ? c.getPais() : null);
 
                     if (distritoLower != null && !cDistrito.toLowerCase().contains(distritoLower)) {
                         return null;
                     }
                     if (provinciaLower != null && !cProvincia.toLowerCase().contains(provinciaLower)) {
+                        return null;
+                    }
+                    if (departamentoLower != null && !cDepartamento.toLowerCase().contains(departamentoLower)) {
                         return null;
                     }
                     if (paisLower != null && !cPais.toLowerCase().contains(paisLower)) {
@@ -540,6 +558,7 @@ public class VentaServiceImpl implements VentaService {
                             c != null ? c.getNombre() : null,
                             cDistrito,
                             cProvincia,
+                            cDepartamento,
                             cPais,
                             det.getProducto() != null ? det.getProducto().getNombre() : null,
                             det.getCantidad(),
@@ -582,6 +601,13 @@ public class VentaServiceImpl implements VentaService {
         Venta guardada = ventaRepo.save(venta);
         log.info("Confirmación de entrega registrada para venta #{} - correo: {}", ventaId, dto.correo());
         return toResponseDTO(guardada);
+    }
+
+    private static String coalesceUbicacion(String preferVenta, String fallbackCliente) {
+        if (preferVenta != null && !preferVenta.isBlank()) {
+            return preferVenta.trim();
+        }
+        return fallbackCliente != null ? fallbackCliente.trim() : "";
     }
 
     private void verificarAccesoSector(Sector sectorEntidad) {
@@ -655,6 +681,8 @@ public class VentaServiceImpl implements VentaService {
                 v.getRequiereDelivery(),
                 v.getTipoEntrega() != null ? v.getTipoEntrega().name() : null,
                 v.getDireccionEntrega(),
+                v.getDepartamentoEntrega(),
+                v.getPaisEntrega(),
                 v.getEstadoEntrega() != null ? v.getEstadoEntrega().name() : null,
                 v.getUsuarioEntrega() != null ? v.getUsuarioEntrega().getUsername() : null,
                 v.getCodigoTracking(),

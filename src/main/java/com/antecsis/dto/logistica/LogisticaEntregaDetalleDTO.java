@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 /**
  * Detalle de entregas (delivery) para Logística:
- * vendedor, cliente, producto, cantidad y zona (distrito/provincia/pais).
+ * vendedor, cliente, producto, cantidad y zona (distrito/provincia/departamento/país).
  */
 public record LogisticaEntregaDetalleDTO(
     Long ventaId,
@@ -17,6 +17,7 @@ public record LogisticaEntregaDetalleDTO(
     String clienteNombre,
     String distrito,
     String provincia,
+    String departamento,
     String pais,
     String productoNombre,
     Integer cantidad,

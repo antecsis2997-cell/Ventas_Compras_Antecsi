@@ -23,6 +23,8 @@ public record VentaResponseDTO(
     Boolean requiereDelivery,
     String tipoEntrega,
     String direccionEntrega,
+    String departamentoEntrega,
+    String paisEntrega,
     String estadoEntrega,
     String entregadoPorNombre,
     String codigoTracking,

@@ -33,11 +33,18 @@ public record VentaRequestDTO(
     @Schema(description = "Si requiere delivery. Si true, venta queda PENDIENTE hasta que Logística marque entregado.")
     Boolean requiereDelivery,
 
-    @Schema(description = "Tipo de entrega: INMEDIATA o PROGRAMADA_3_5 (3 a 5 días)", allowableValues = { "INMEDIATA", "PROGRAMADA_3_5" })
+    @Schema(description = "Tipo de entrega: INMEDIATA, PROGRAMADA_3_5 o PROGRAMADA_5_6_MESES",
+            allowableValues = { "INMEDIATA", "PROGRAMADA_3_5", "PROGRAMADA_5_6_MESES" })
     String tipoEntrega,
 
-    @Schema(description = "Dirección de entrega (obligatorio cuando tipoEntrega es INMEDIATA)")
+    @Schema(description = "Dirección de entrega (obligatorio para INMEDIATA y PROGRAMADA_5_6_MESES)")
     String direccionEntrega,
+
+    @Schema(description = "Departamento de la zona de entrega (obligatorio si requiereDelivery es true)")
+    String departamentoEntrega,
+
+    @Schema(description = "País de la zona de entrega (obligatorio si requiereDelivery es true)")
+    String paisEntrega,
 
     @Schema(description = "DNI para acumulación de puntos CMR (opcional)")
     String dniCmr,

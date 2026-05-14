@@ -10,6 +10,7 @@ public record ClienteResponseDTO(
     String direccion,
     String distrito,
     String provincia,
+    String departamento,
     String pais,
     Boolean activo
 ) {}

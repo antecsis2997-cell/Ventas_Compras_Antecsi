@@ -38,6 +38,10 @@ public class Cliente {
     /** Zona de ventas: provincia del cliente (para métricas de logística). */
     private String provincia;
 
+    /** Zona de ventas: departamento del cliente (para métricas de logística). */
+    @Column(length = 120)
+    private String departamento;
+
     /** Zona de ventas: país del cliente (para métricas de logística). */
     private String pais;
 

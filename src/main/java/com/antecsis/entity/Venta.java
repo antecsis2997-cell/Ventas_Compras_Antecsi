@@ -89,6 +89,14 @@ public class Venta {
     @Column(name = "direccion_entrega", length = 500)
     private String direccionEntrega;
 
+    /** Departamento de la zona de entrega (logística). */
+    @Column(name = "departamento_entrega", length = 120)
+    private String departamentoEntrega;
+
+    /** País de la zona de entrega (logística). */
+    @Column(name = "pais_entrega", length = 120)
+    private String paisEntrega;
+
     /** Estado del delivery: PENDIENTE, EN_CAMINO, ENTREGADO. */
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_entrega", length = 20)
@@ -128,7 +136,7 @@ public class Venta {
     @Column(name = "sunat_estado_cdr", length = 20)
     private SunatEstadoCdr sunatEstadoCdr;
 
-    /** Código de respuesta del CDR SUNAT: "0"=aceptado, "2xxx"-"3xxx"=rechazado */
+    /** Código de respuesta SUNAT ({@code cbc:ResponseCode}): {@code "0"} = recepción aceptada; distinto de cero = rechazo */
     @Column(name = "sunat_codigo_respuesta", length = 10)
     private String sunatCodigoRespuesta;
 

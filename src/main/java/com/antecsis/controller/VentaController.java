@@ -106,7 +106,7 @@ public class VentaController {
 
     @Operation(
             summary = "Detalle de entregas para Logística",
-            description = "Lista de entregas (delivery) con vendedor, cliente, producto, cantidad y zona (distrito/provincia/pais)."
+            description = "Lista de entregas (delivery) con vendedor, cliente, producto, cantidad y zona (distrito/provincia/departamento/país)."
     )
     @PreAuthorize("hasAnyRole('SUPERADMIN','SUPERUSUARIO','ADMIN','LOGISTICA')")
     @GetMapping("/logistica/entregas-detalle")
@@ -115,9 +115,10 @@ public class VentaController {
             @Parameter(description = "ID del vendedor (opcional)") @RequestParam(required = false) Long vendedorId,
             @Parameter(description = "Filtro por distrito (contiene, opcional)") @RequestParam(required = false) String distrito,
             @Parameter(description = "Filtro por provincia (contiene, opcional)") @RequestParam(required = false) String provincia,
+            @Parameter(description = "Filtro por departamento (contiene, opcional)") @RequestParam(required = false) String departamento,
             @Parameter(description = "Filtro por país (contiene, opcional)") @RequestParam(required = false) String pais
     ) {
-        return ResponseEntity.ok(service.metricasLogisticaEntregas(sectorId, vendedorId, distrito, provincia, pais));
+        return ResponseEntity.ok(service.metricasLogisticaEntregas(sectorId, vendedorId, distrito, provincia, departamento, pais));
     }
 
     @Operation(summary = "Solicitar tracking", description = "Genera código de tracking para seguimiento del envío.")
